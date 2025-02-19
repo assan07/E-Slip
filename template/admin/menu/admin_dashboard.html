@@ -1,0 +1,114 @@
+{% extends "../base/base.html" %} {% block content %}
+<div class="container mt-4">
+  <h2 class="mb-3">Dashboard Admin</h2>
+
+  <!-- Statistik -->
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card bg-primary text-white shadow-sm">
+        <div class="card-body">
+          <h5>Total Mahasiswa</h5>
+          <h3>{{ total_mahasiswa }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white shadow-sm">
+        <div class="card-body">
+          <h5>Total Slip Pembayaran</h5>
+          <h3>{{ total_slip }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-white shadow-sm">
+        <div class="card-body">
+          <h5>Total Pembayaran</h5>
+          <h3>Rp. {{ total_pembayaran }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-danger text-white shadow-sm">
+        <div class="card-body">
+          <h5>Belum Diverifikasi</h5>
+          <h3>{{ belum_verifikasi }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grafik Pembayaran -->
+  <div class="card mt-4">
+    <div class="card-body">
+      <h5 class="card-title">Statistik Pembayaran Mahasiswa</h5>
+      <canvas id="chartPembayaran"></canvas>
+    </div>
+  </div>
+
+  <!-- Tabel Slip Pembayaran Terbaru -->
+  <div class="card mt-4">
+    <div class="card-body">
+      <h5 class="card-title">Slip Pembayaran Terbaru</h5>
+      <table class="table table-bordered">
+        <thead class="table-dark">
+          <tr>
+            <th>No</th>
+            <th>NIM</th>
+            <th>Nama</th>
+            <th>Tanggal</th>
+            <th>Jumlah</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for slip in slip_terbaru %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ slip.nim }}</td>
+            <td>{{ slip.nama }}</td>
+            <td>{{ slip.tanggal }}</td>
+            <td>Rp. {{ slip.jumlah }}</td>
+            <td>
+              {% if slip.status == 'Lunas' %}
+              <span class="badge bg-success">Lunas</span>
+              {% else %}
+              <span class="badge bg-danger">Belum Lunas</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  var ctx = document.getElementById('chartPembayaran').getContext('2d');
+  var chartPembayaran = new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: {{ bulan | tojson }},
+          datasets: [{
+              label: 'Total Pembayaran',
+              data: {{ pembayaran | tojson }},
+              backgroundColor: 'rgba(54, 162, 235, 0.5)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+          }]
+      },
+      options: {
+          responsive: true,
+          scales: {
+              y: {
+                  beginAtZero: true
+              }
+          }
+      }
+  });
+</script>
+
+{% endblock %}
