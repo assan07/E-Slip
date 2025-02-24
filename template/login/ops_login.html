@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <title>E-Slip</title>
+    <style>
+      body {
+        background-color: #f0f0f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
+        text-align: center;
+      }
+      .card {
+        transition: transform 0.3s;
+      }
+      .card:hover {
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Selamat Datang di E-Slip</h1>
+    <h2>Universitas Dayanu Ikhsanuddin</h2>
+
+    <div class="container mt-4">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card text-center p-4">
+            <img src="../../static/img/icon/user-tie-svgrepo-com.svg" alt="Ikon Staf Prodi" style="width: 50px;" />
+            <div class="card-body">
+              <h5 class="card-title">Login sebagai Staf Prodi</h5>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center p-4">
+            <img src="../../static/img/icon/user-id-portrait-svgrepo-com.svg" alt="Ikon Staf loket" style="width: 50px;" />
+            
+            <div class="card-body">
+              <h5 class="card-title">Login sebagai Staf Loket</h5>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center p-4">
+            <img src="../../static/img/icon/user-graduate-svgrepo-com.svg" alt="Ikon Mahasiswa" style="width: 50px;" />
+            <div class="card-body">
+              <h5 class="card-title">Login sebagai Mahasiswa</h5>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      // JavaScript untuk animasi jika diperlukan
+      $(document).ready(function () {
+        $(".card").hover(function () {
+          $(this).toggleClass("shadow-lg");
+        });
+      });
+    </script>
+  </body>
+</html>
