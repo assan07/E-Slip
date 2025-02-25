@@ -1,0 +1,58 @@
+.sidebar {
+    background-color: navy;
+    min-height: 100vh;
+}
+.sidebar .nav-link {
+    color: white;
+}
+
+.judul {
+    color: white;
+    font-weight: bolder;
+}
+.sidebar .nav-link:hover {
+    background-color: #b0b0b0;
+}
+.sidebar .user-info {
+    background-color: #a0a0a0;
+    padding: 1rem;
+    margin-top: auto;
+}
+.user-info p {
+    margin: 0;
+}
+.user-info .font-weight-bold {
+    font-weight: bold;
+}
+.table-container {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+.table thead th {
+    border-bottom: 2px solid #dee2e6;
+}
+.table tbody tr:nth-child(odd) {
+    background-color: #e2e2e2;
+}
+.main-content {
+    background-color: #f8f9fa;
+}
+.message-box {
+    background-color: #e9ecef;
+}
+.message-box textarea {
+    background-color: white;
+}
+.message-box select {
+    background-color: white;
+}
+
+.logo {
+    width: 200px;
+    margin-left: -35px;
+    margin-top: -20px;
+}
+.active {
+    background-color: #b0b0b0;
+}
