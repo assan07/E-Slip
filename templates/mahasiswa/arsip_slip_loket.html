@@ -75,37 +75,37 @@
           <div class="col-md-8">
             <h3>Arsip Slip Pembayaran Mahasiswa</h3>
             <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th scope="col">No</th>
-                    <th scope="col">Nama Lengkap</th>
-                    <th scope="col">NIM</th>
-                    <th scope="col">Semester</th>
-                    <th scope="col">Tanggal Bayar</th>
-                    <th scope="col">Total Bayar</th>
-                    <th scope="col">Status Bayar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th scope="row">1</th>
-                    <td>Achmad Hasanudin</td>
-                    <td>22650062</td>
-                    <td>V</td>
-                    <td>22-10-2024</td>
-                    <td>Rp. 1900000</td>
-                    <td>Cicilan 1</td>
-                  </tr>
-                    <tr>
-                        <th scope="row">2</th>
-                        <td>Yusuf</td>
-                        <td>22650063</td>
-                        <td>V</td>
-                        <td>22-10-2024</td>
-                        <td>Rp. 1900000</td>
-                        <td>Cicilan 1</td>
-                </tbody>
-              </table>
+              <thead>
+                <tr>
+                  <th scope="col">No</th>
+                  <th scope="col">Nama Lengkap</th>
+                  <th scope="col">NIM</th>
+                  <th scope="col">Semester</th>
+                  <th scope="col">Tanggal Upload</th>
+                  <th scope="col">Total Bayar</th>
+                  <th scope="col">Status Bayar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for slip in slips %}
+                <tr>
+                  <th scope="row">{{ loop.index }}</th>
+                  <td>{{ slip.nama_mahasiswa }}</td>
+                  <td>{{ slip.nim_mahasiswa }}</td>
+                  <td>{{ slip.semester }}</td>
+                  <!-- Jika tidak ada field tanggal bayar, tampilkan placeholder -->
+                  <td>{{ slip.tanggal_upload if slip.tanggal_upload is defined else "N/A" }}</td>
+                  <td>{{ slip.total_bayar }}</td>
+                  <!-- Gunakan field cicilan_pembayaran sebagai status bayar -->
+                  <td>{{ slip.cicilan_pembayaran }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="7" class="text-center">Belum ada data slip pembayaran</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

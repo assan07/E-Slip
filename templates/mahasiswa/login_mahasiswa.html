@@ -42,18 +42,19 @@
         </div>
         <div class="right-side">
           <form action="{{ url_for('login_mahasiswa') }}" method="POST">
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            if messages %} {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %} {% endif %} {% endwith %}
             <div class="form-group">
-              {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %} {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">{{ message }}</div>
-              {% endfor %} {% endif %} {% endwith %}
               <label for="username">NIM Mahasiswa</label>
               <input
                 type="text"
                 class="form-control"
-                id="nimMahasiswa"
+                id="username"
                 name="nimMahasiswa"
                 placeholder="NIM Mahasiswa"
+                required
               />
             </div>
             <div class="form-group">
@@ -64,6 +65,7 @@
                 id="passwordMahasiswa"
                 name="passwordMahasiswa"
                 placeholder="Password Mahasiswa"
+                required
               />
             </div>
 

@@ -1,1 +1,1 @@
-nimMahasiswa
+remainingCycle
