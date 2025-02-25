@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash
+from flask import Flask, render_template, redirect, url_for, request, session, flash, send_from_directory
 import mysql.connector
 from mysql.connector import Error
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -32,11 +32,302 @@ def first_menu():
 
 @app.route('/loket/login_staf_loket')
 def login_staf_loket():
+    if request.method == 'POST':
+        # Ambil data dari form login dan hapus spasi ekstra
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        # Debug: Cetak nilai yang diterima (gunakan repr() untuk menampilkan karakter tersembunyi)
+        print(f"Debug: username = {repr(username)}, password = {repr(password)}")
+        
+        # Hubungkan ke database
+        conn = get_db_connection()
+        if conn is None:
+            flash("Gagal terhubung ke database", "danger")
+            return redirect(url_for('login_staf_loket'))
+        
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        query = "SELECT * FROM staf_loket WHERE username = %s"
+        cursor.execute(query, (username,))
+        user = cursor.fetchone()
+        print("Debug: User fetched =", user)
+        cursor.close()
+        conn.close()
+        
+        if user is None:
+            flash("Username salah", "danger")
+            return redirect(url_for('login_staf_loket'))
+        
+        # Ambil hash password yang tersimpan dan hapus spasi ekstra
+        stored_hash = user.get('password', '').strip()
+        print("Debug: Stored hash:", repr(stored_hash))
+        
+        # Verifikasi password menggunakan stored_hash
+        if not check_password_hash(stored_hash, password):
+            flash("Password salah", "danger")
+            print("Debug: Password salah")
+            return redirect(url_for('login_staf_loket'))
+        
+        # Jika validasi berhasil, simpan username ke session dan re direct
+        session['loket'] = user['username']
+        flash("Login berhasil!", "success")
+        return redirect(url_for('dashboard_loket'))
+    
     return render_template('loket/login_staf_loket.html')
 
+# Route untuk dashboard loket
+@app.route('/loket/dashboard_loket', methods=['GET'])
+def dashboard_loket():
+    # Hubungkan ke database
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('first_menu'))
+    
+    # Buat cursor dengan dictionary=True agar hasil query berupa dictionary
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    
+    # Query untuk mengambil statistik data (sesuaikan query dengan skema database Anda)
+    cursor.execute("SELECT COUNT(*) AS total FROM data_mahasiswa")
+    total_mahasiswa = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) AS total FROM slip_pembayaran WHERE status_pembayaran = 'lunas'")
+    lunas = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) AS total FROM slip_pembayaran WHERE status_pembayaran != 'lunas'")
+    belum_lunas = cursor.fetchone()['total']
+    
+    cursor.execute("""
+        SELECT COUNT(*) AS total 
+        FROM data_mahasiswa 
+        WHERE nim_mahasiswa NOT IN (SELECT nim_mahasiswa FROM slip_pembayaran)
+    """)
+    belum_bayar = cursor.fetchone()['total']
+    
+    # Query untuk mengambil semua data slip_pembayaran
+    query = "SELECT * FROM slip_pembayaran"
+    cursor.execute(query)
+    slips = cursor.fetchall()
+    print("Debug: slips =", slips)  # Debug: pastikan data tampil sebagai dictionary
+    
+    cursor.close()
+    conn.close()
+    
+    # Kirim data ke template
+    return render_template(
+        'loket/dashboard_loket.html',
+        total_mahasiswa=total_mahasiswa,
+        lunas=lunas,
+        belum_lunas=belum_lunas,
+        belum_bayar=belum_bayar,
+        slips=slips
+    )
+
+@app.route('/loket/arsip_slip_loket', methods=['GET'])
+def arsip_slip(): 
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('dashboard_loket'))
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    query = "SELECT * FROM slip_pembayaran"
+    cursor.execute(query)
+    slips = cursor.fetchall()
+    print("Debug: slips =", slips)
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('loket/arsip_slip_loket.html', slips=slips)
+
+# Route untuk download arsip_Slip_loket
+@app.route('/loket/arsip_slip_loket/download_slip/<filename>')
+def download_slip(filename):
+    # Pastikan filename yang diterima aman dengan secure_filename jika perlu
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
+# Route untuk kirim pesan
+@app.route('/loket/kirim_pesan', methods=['GET', 'POST'])
+def kirim_pesan():
+    if request.method == 'POST':
+        # Ambil data dari form
+        pesan_text = request.form.get('pesan', '').strip()
+        penerima_option = request.form.get('penerima', '').strip()  # Nilai dari select
+        
+        # Validasi: pastikan pesan tidak kosong
+        if not pesan_text:
+            flash("Pesan tidak boleh kosong.", "danger")
+            return redirect(url_for('kirim_pesan'))
+        
+        # Tentukan penerima berdasarkan pilihan
+        if penerima_option == 'pilih':
+            # Jika memilih "Pilih Mahasiswa", harus mengisi input tambahan untuk NIM
+            target_nim = request.form.get('target_nim', '').strip()
+            if not target_nim:
+                flash("Harap masukkan NIM mahasiswa yang dituju.", "danger")
+                return redirect(url_for('kirim_pesan'))
+            actual_recipient = target_nim
+        elif penerima_option in ['semua', 'belum_lunas_cicilan1', 'belum_lunas_cicilan2', 'belum_bayar']:
+            actual_recipient = penerima_option
+        else:
+            flash("Pilihan penerima tidak valid.", "danger")
+            return redirect(url_for('kirim_pesan'))
+        
+        # Hubungkan ke database dan simpan pesan
+        conn = get_db_connection()
+        if conn is None:
+            flash("Gagal terhubung ke database.", "danger")
+            return redirect(url_for('kirim_pesan'))
+        
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        try:
+            insert_query = """
+                INSERT INTO pesan_informasi (pesan_text, penerima, tanggal_kirim)
+                VALUES (%s, %s, NOW())
+            """
+            cursor.execute(insert_query, (pesan_text, actual_recipient))
+            conn.commit()
+            flash("Pesan berhasil dikirim!", "success")
+        except Exception as e:
+            conn.rollback()
+            flash("Gagal mengirim pesan: " + str(e), "danger")
+        finally:
+            cursor.close()
+            conn.close()
+        return redirect(url_for('kirim_pesan'))
+    
+    return render_template('loket/informasi.html')
+
+# ====================PRODI===================
 @app.route('/prodi/login_staf_prodi')
 def login_staf_prodi():
     return render_template('prodi/login_staf_prodi.html')
+
+
+# Route untuk dashboard prodi
+@app.route('/prodi/dashboard_prodi', methods=['GET'])
+def dashboard_prodi():
+    # Hubungkan ke database
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('first_menu'))
+    
+    # Buat cursor dengan dictionary=True agar hasil query berupa dictionary
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    
+    # Query untuk mengambil statistik data (sesuaikan query dengan skema database Anda)
+    cursor.execute("SELECT COUNT(*) AS total FROM data_mahasiswa")
+    total_mahasiswa = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) AS total FROM slip_pembayaran WHERE status_pembayaran = 'lunas'")
+    lunas = cursor.fetchone()['total']
+    
+    cursor.execute("SELECT COUNT(*) AS total FROM slip_pembayaran WHERE status_pembayaran != 'lunas'")
+    belum_lunas = cursor.fetchone()['total']
+    
+    cursor.execute("""
+        SELECT COUNT(*) AS total 
+        FROM data_mahasiswa 
+        WHERE nim_mahasiswa NOT IN (SELECT nim_mahasiswa FROM slip_pembayaran)
+    """)
+    belum_bayar = cursor.fetchone()['total']
+    
+    # Query untuk mengambil semua data slip_pembayaran
+    query = "SELECT * FROM slip_pembayaran"
+    cursor.execute(query)
+    slips = cursor.fetchall()
+    print("Debug: slips =", slips)  # Debug: pastikan data tampil sebagai dictionary
+    
+    cursor.close()
+    conn.close()
+    
+    # Kirim data ke template
+    return render_template(
+        'prodi/dashboard_prodi.html',
+        total_mahasiswa=total_mahasiswa,
+        lunas=lunas,
+        belum_lunas=belum_lunas,
+        belum_bayar=belum_bayar,
+        slips=slips
+    )
+
+@app.route('/prodi/arsip_slip_prodi', methods=['GET'])
+def slip_arsip_prodi(): 
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('dashboard_loket'))
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    query = "SELECT * FROM slip_pembayaran"
+    cursor.execute(query)
+    slips = cursor.fetchall()
+    print("Debug: slips =", slips)
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('prodi/arsip_slip_prodi.html', slips=slips)
+
+# Route untuk download arsip_Slip_loket
+@app.route('/prodi/arsip_slip_prodi/download_slip/<filename>')
+def download_slip_prodi(filename):
+    # Pastikan filename yang diterima aman dengan secure_filename jika perlu
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
+# Route untuk kirim pesan
+@app.route('/prodi/kirim_pesan', methods=['GET', 'POST'])
+def kirim_pesan_prodi():
+    if request.method == 'POST':
+        # Ambil data dari form
+        pesan_text = request.form.get('pesan', '').strip()
+        penerima_option = request.form.get('penerima', '').strip()  # Nilai dari select
+        
+        # Validasi: pastikan pesan tidak kosong
+        if not pesan_text:
+            flash("Pesan tidak boleh kosong.", "danger")
+            return redirect(url_for('kirim_pesan'))
+        
+        # Tentukan penerima berdasarkan pilihan
+        if penerima_option == 'pilih':
+            # Jika memilih "Pilih Mahasiswa", harus mengisi input tambahan untuk NIM
+            target_nim = request.form.get('target_nim', '').strip()
+            if not target_nim:
+                flash("Harap masukkan NIM mahasiswa yang dituju.", "danger")
+                return redirect(url_for('kirim_pesan'))
+            actual_recipient = target_nim
+        elif penerima_option in ['semua', 'belum_lunas_cicilan1', 'belum_lunas_cicilan2', 'belum_bayar']:
+            actual_recipient = penerima_option
+        else:
+            flash("Pilihan penerima tidak valid.", "danger")
+            return redirect(url_for('kirim_pesan'))
+        
+        # Hubungkan ke database dan simpan pesan
+        conn = get_db_connection()
+        if conn is None:
+            flash("Gagal terhubung ke database.", "danger")
+            return redirect(url_for('kirim_pesan'))
+        
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        try:
+            insert_query = """
+                INSERT INTO pesan_informasi (pesan_text, penerima, tanggal_kirim)
+                VALUES (%s, %s, NOW())
+            """
+            cursor.execute(insert_query, (pesan_text, actual_recipient))
+            conn.commit()
+            flash("Pesan berhasil dikirim!", "success")
+        except Exception as e:
+            conn.rollback()
+            flash("Gagal mengirim pesan: " + str(e), "danger")
+        finally:
+            cursor.close()
+            conn.close()
+        return redirect(url_for('kirim_pesan'))
+    
+    return render_template('prodi/informasi_dari_prodi.html')
 
 # ========================
 # Registrasi Mahasiswa
@@ -189,7 +480,21 @@ def data_mahasiswa():
     except ValueError:
         total_cicilan_mahasiswa = 0
     sisa_cicilan = total_cicilan_mahasiswa - total_cicilan_pembayaran
+
+    status_pembayaran = 'cicilan{}'.format(total_cicilan_pembayaran)
+    print("Debug: Status pembayaran =", status_pembayaran)
+
+    # Update status pembayaran
+    if sisa_cicilan <= 0:
+        status_pembayaran = 'lunas'
+    else:
+        status_pembayaran = 'cicilan {}'.format(total_cicilan_mahasiswa)
+    print("Debug: Status pembayaran =", status_pembayaran)
     
+    query4 = "UPDATE slip_pembayaran SET status_pembayaran = %s WHERE nim_mahasiswa = %s"
+    cursor.execute(query4, (status_pembayaran, nim))
+    conn.commit()
+
     cursor.close()
     conn.close()
     
@@ -326,23 +631,34 @@ def stor_slip():
         slip_loket_file = request.files.get('slip_loket')
         slip_prodi_file = request.files.get('slip_prodi')
         slip_mahasiswa_file = request.files.get('slip_mahasiswa')
+       
 
         # Inisialisasi nama file untuk disimpan ke database
-        slip_loket_filename = None
-        slip_prodi_filename = None
-        slip_mahasiswa_filename = None
+        slip_loket_filename = studentNumber + '_loket'
+        slip_prodi_filename = studentNumber + '_prodi'  
+        slip_mahasiswa_filename = studentNumber + '_mahasiswa'
+       
 
         if slip_loket_file and slip_loket_file.filename:
-            slip_loket_filename = secure_filename(slip_loket_file.filename)
+            ext = os.path.splitext(slip_loket_file.filename)[1]
+            slip_loket_filename = secure_filename(studentNumber + 'arsip_slip_loket' + ext)
             slip_loket_file.save(os.path.join(app.config['UPLOAD_FOLDER'], slip_loket_filename))
-        
+        else:
+            slip_loket_filename = None
+
         if slip_prodi_file and slip_prodi_file.filename:
-            slip_prodi_filename = secure_filename(slip_prodi_file.filename)
+            ext = os.path.splitext(slip_prodi_file.filename)[1]
+            slip_prodi_filename = secure_filename(studentNumber + 'arsip_slip_prodi' + ext)
             slip_prodi_file.save(os.path.join(app.config['UPLOAD_FOLDER'], slip_prodi_filename))
-        
+        else:
+            slip_prodi_filename = None
+
         if slip_mahasiswa_file and slip_mahasiswa_file.filename:
-            slip_mahasiswa_filename =   secure_filename(slip_mahasiswa_file.filename)
+            ext = os.path.splitext(slip_mahasiswa_file.filename)[1]
+            slip_mahasiswa_filename = secure_filename(studentNumber + 'arsip_slip_mahasiswa' + ext)
             slip_mahasiswa_file.save(os.path.join(app.config['UPLOAD_FOLDER'], slip_mahasiswa_filename))
+        else:
+            slip_mahasiswa_filename = None
 
         # Hubungkan ke database
         conn = get_db_connection()
@@ -374,7 +690,13 @@ def stor_slip():
         finally:
             cursor.close()
             conn.close()
+        
     return render_template('mahasiswa/stor_slip.html')
+
+# Route untuk loket
+# Router untuk login staf loket
+
+    
     
 
 if __name__ == '__main__':

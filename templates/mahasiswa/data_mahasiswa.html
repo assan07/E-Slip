@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Slip</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+
+    <style>
+      .sidebar {
+        background-color: #f8f9fa;
+        height: 100vh;
+        padding: 20px;
+      }
+      .profile-photo {
+        width: 100%;
+        height: 150px;
+        background-color: #eaeaea;
+        border: 1px solid #007bff;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .profile-photo img {
+        border-radius: 50%;
+        width: 60%;
+        height: 60%;
+      }
+      .form-control {
+        margin-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="d-flex">
+      <div class="sidebar">
+        <h2>E-Slip</h2>
+        <ul class="list-unstyled">
+          <li><a href="#">Beranda</a></li>
+          <li><a href="#">Data Mahasiswa</a></li>
+          <li><a href="#">Arsip Slip</a></li>
+          <li><a href="#">Slip Loket</a></li>
+          <li><a href="#">Slip Prodi</a></li>
+          <li><a href="#">Slip Mahasiswa</a></li>
+          <li><a href="#">Logout</a></li>
+        </ul>
+        <p>Login as: Achmad Hasanudin</p>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="head-main col-md-12 d-flex">
+            <div class="search col-md-4">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Cari Mahasiswa"
+              />
+            </div>
+            <div class="massage">
+              <p>🔔</p>
+            </div>
+            <div class="profile">
+              <p>👤</p>
+            </div>
+          </div>
+          <form
+            method="POST"
+            action="{{ url_for('data_mahasiswa') }}"
+            enctype="multipart/form-data"
+          >
+            <div class="row">
+              <!-- Kolom Foto Profil -->
+              <div class="col-md-4 d-flex flex-column">
+                <div class="profile-photo text-center">
+                  <img
+                    src="{{ url_for('static', filename='uploads/' ~ mahasiswa.foto_mahasiswa) if mahasiswa.foto_mahasiswa else 'https://via.placeholder.com/100' }}"
+                    alt="Foto Profil"
+                    class="img-fluid rounded mb-2"
+                  />
+                  <p>{{ mahasiswa.nama_mahasiswa }}</p>
+                  <!-- File input disembunyikan -->
+                  <input
+                    type="file"
+                    id="fotoInput"
+                    name="foto_mahasiswa"
+                    style="display: none"
+                  />
+                  <!-- Tombol untuk memicu file input -->
+                  <button
+                    type="button"
+                    class="btn btn-info btn-sm"
+                    onclick="document.getElementById('fotoInput').click()"
+                  >
+                    Ubah Gambar
+                  </button>
+                  {% with messages = get_flashed_messages(with_categories=true)
+                  %} {% if messages %} {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">{{ message }}</div>
+                  {% endfor %} {% endif %} {% endwith %}
+                </div>
+              </div>
+              <!-- Kolom Data Pribadi -->
+              <div class="col-md-8">
+                <h3>Informasi Pribadi</h3>
+                <div class="form-row mb-3">
+                  <div class="form-group col-md-6">
+                    <label for="fullName">Nama Lengkap</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="fullName"
+                      name="fullName"
+                      placeholder="Nama Lengkap"
+                      value="{{ mahasiswa.nama_mahasiswa }}"
+                    />
+                  </div>
+                  <div class="form-group col-md-6">
+                    <label for="email">Email</label>
+                    <input
+                      type="email"
+                      class="form-control"
+                      id="email"
+                      name="email"
+                      placeholder="Email"
+                      value="{{ mahasiswa.email_mahasiswa }}"
+                    />
+                  </div>
+                </div>
+                <div class="form-row mb-3">
+                  <div class="form-group col-md-6">
+                    <label for="phone">No. Handphone</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="phone"
+                      name="phone"
+                      placeholder="No. Handphone"
+                      value="{{ mahasiswa.noHp_mahasiswa if mahasiswa.noHp_mahasiswa is defined else '' }}"
+                    />
+                  </div>
+                </div>
+                <div class="form-row mb-3">
+                  <div class="form-group col-md-6">
+                    <label for="semester">Semester</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="semester"
+                      name="semester"
+                      placeholder="Semester"
+                      value="{{ mahasiswa.semester if mahasiswa.semester is defined else '' }}"
+                    />
+                  </div>
+                  <div class="form-group col-md-6">
+                    <label for="paymentCycle">Total Cicilan</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="paymentCycle"
+                      name="paymentCycle"
+                      placeholder="Total Cicilan"
+                      value="{{ mahasiswa.cicilan_mahasiswa }}"
+                    />
+                  </div>
+                </div>
+                <div class="form-row mb-3">
+                  <div class="form-group col-md-6">
+                    <label for="studentNumber">Nomor Induk Mahasiswa</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="studentNumber"
+                      name="studentNumber"
+                      placeholder="Nomor Induk"
+                      value="{{ mahasiswa.nim_mahasiswa }}"
+                      readonly
+                    />
+                  </div>
+                  <div class="form-group col-md-6">
+                    <label for="remainingPay">Sisa Cicilan</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="remainingCycle"
+                      name="remainingCycle"
+                      placeholder="Sisa Cicilan"
+                      value="{{ sisa_cicilan }}"
+                      readonly
+                    />
+                  </div>
+                </div>
+                <div class="form-group mb-3">
+                  <label for="address">Alamat</label>
+                  <textarea
+                    class="form-control"
+                    id="address"
+                    name="address"
+                    rows="3"
+                    placeholder="Alamat"
+                  >
+{{ mahasiswa.alamat_mahasiswa if mahasiswa.alamat_mahasiswa is defined else '' }}</textarea
+                  >
+                </div>
+                <button type="button" class="btn btn-secondary">
+                  Ubah Pass
+                </button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>

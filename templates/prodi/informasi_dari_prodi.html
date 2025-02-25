@@ -1,0 +1,130 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Informasi | Unidayan</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="bg-light">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+          <div class="position-sticky d-flex flex-column" style="height: 100vh">
+            <div class="d-flex align-items-center p-3">
+              <img src="../../assest/img/logo.png" alt="logo" class="logo" />
+            </div>
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">Dashboard</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="slipmahasiswa.html">Slip Mahasiswa</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="informasi.html">Informasi</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Logout</a>
+              </li>
+            </ul>
+            <div
+              class="user-info mt-auto"
+              style="background-color: white; color: navy"
+            >
+              <p>Login in as:</p>
+              <p class="font-weight-bold">Achmad Hasanudin</p>
+            </div>
+          </div>
+        </nav>
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-md-4 main-content">
+          <div
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3"
+          >
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+                <input type="text" class="form-control" placeholder="Search" />
+                <button class="btn btn-secondary ml-2">Search</button>
+              </div>
+            </div>
+            <div
+              class="rounded-circle"
+              style="width: 40px; height: 40px; background-color: navy"
+            ></div>
+          </div>
+          <div class="message-box p-4 shadow-sm rounded">
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            if messages %} {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %} {% endif %} {% endwith %}
+            <h2 class="h5 mb-3">Kotak Pesan</h2>
+            <form action="{{ url_for('kirim_pesan_prodi') }}" method="POST">
+              <div class="form-group mb-3">
+                <textarea
+                  name="pesan"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Tulis Pesan untuk mahasiswa"
+                ></textarea>
+              </div>
+              <div class="form-group mb-3">
+                <select name="penerima" class="form-select">
+                  <option value="semua">Semua Mahasiswa</option>
+                  <option value="pilih">Pilih Mahasiswa</option>
+                  <option value="belum_lunas_cicilan1">
+                    Mahasiswa yang belum lunas Cicilan ke 1
+                  </option>
+                  <option value="belum_lunas_cicilan2">
+                    Mahasiswa yang belum lunas Cicilan ke 2
+                  </option>
+                  <option value="belum_bayar">Mahasiswa belum Bayar</option>
+                </select>
+              </div>
+              <!-- Input tambahan untuk NIM, tampilkan hanya jika "pilih" dipilih -->
+              <div
+                class="form-group mb-3"
+                id="targetNimDiv"
+                style="display: none"
+              >
+                <input
+                  type="text"
+                  name="target_nim"
+                  class="form-control"
+                  placeholder="Masukkan NIM Mahasiswa"
+                />
+              </div>
+              <div class="d-flex justify-content-end" style="gap: 10px">
+                <button type="submit" class="btn btn-secondary">Kirim</button>
+                <button type="reset" class="btn btn-secondary">Batal</button>
+              </div>
+            </form>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      // JavaScript untuk menampilkan input NIM jika opsi "pilih" dipilih
+      const selectElem = document.querySelector('select[name="penerima"]');
+      const targetNimDiv = document.getElementById("targetNimDiv");
+
+      selectElem.addEventListener("change", function () {
+        if (this.value === "pilih") {
+          targetNimDiv.style.display = "block";
+        } else {
+          targetNimDiv.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

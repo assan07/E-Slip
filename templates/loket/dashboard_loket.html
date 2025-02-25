@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Slip UNIDAYAN</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+          <div class="position-sticky d-flex flex-column" style="height: 100vh">
+            <div class="d-flex align-items-center p-3">
+              <img
+                src="{{ url_for('static', filename='assest/img/logo.png') }}"
+                alt="logo"
+                class="logo"
+              />
+            </div>
+            <ul class="nav flex-column">
+              <li class="nav-item">
+                <a class="nav-link active" href="/loket/dashboard_loket"
+                  >Dashboard</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="slipmahasiswa.html">Slip Mahasiswa</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="informasi.html">Informasi</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#">Logout</a>
+              </li>
+            </ul>
+            <div
+              class="user-info mt-auto"
+              style="background-color: white; color: navy"
+            >
+              <p>Login in as:</p>
+              <p class="font-weight-bold">Achmad Hasanudin</p>
+            </div>
+          </div>
+        </nav>
+        <!-- Main Content -->
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+          <div
+            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom"
+          >
+            <div class="btn-toolbar mb-2 mb-md-0">
+              <div class="btn-group mr-2">
+                <input type="text" class="form-control" placeholder="Search" />
+                <button class="btn btn-secondary ml-2">Search</button>
+              </div>
+            </div>
+            <div
+              class="rounded-circle"
+              style="width: 40px; height: 40px; background-color: navy"
+            ></div>
+          </div>
+          <h1 class="h4">Selamat Datang Di Website E-slip UNIDAYAN</h1>
+          <div class="row my-4">
+            <div class="col-md-4 mb-3">
+              <div
+                class="text-white text-center py-4"
+                style="border-radius: 10px; background-color: blue"
+              >
+                <p>Jumlah Mahasiswa</p>
+                <p class="h3 font-weight-bold">{{ total_mahasiswa }} Orang</p>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div
+                class="text-white text-center py-4"
+                style="border-radius: 10px; background-color: rgb(0, 192, 0)"
+              >
+                <p>Sudah Membayar Lunas</p>
+                <p class="h3 font-weight-bold">{{ lunas }} Orang</p>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div
+                class="text-white text-center py-4"
+                style="border-radius: 10px; background-color: rgb(206, 206, 0)"
+              >
+                <p>Belum Lunas</p>
+                <p class="h3 font-weight-bold">{{ belum_lunas }} Orang</p>
+              </div>
+            </div>
+            <div class="col-md-12 mb-3">
+              <div
+                class="text-white text-center py-4"
+                style="border-radius: 10px; background-color: red"
+              >
+                <p>Belum Bayar</p>
+                <p class="h3 font-weight-bold">{{ belum_bayar }} Orang</p>
+              </div>
+            </div>
+          </div>
+          <h2 class="h5">Arsip Pembayaran Mahasiswa</h2>
+          <div class="table-responsive">
+            <table class="table table-bordered text-center">
+              <thead class="thead-light text-center">
+                <tr>
+                  <th scope="col">No</th>
+                  <th>Nama</th>
+                  <th>Nim</th>
+                  <th>Semester</th>
+                  <th>Tanggal Bayar</th>
+                  <th>Total bayar</th>
+                  <th>Status bayar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for slip in slips %}
+                <tr>
+                  <th scope="row">{{ loop.index }}</th>
+                  <td>{{ slip.nama_mahasiswa }}</td>
+                  <td>{{ slip.nim_mahasiswa }}</td>
+                  <td>{{ slip.semester }}</td>
+                  <td>
+                    {{ slip.tanggal_upload if slip.tanggal_upload is defined else
+                    "N/A" }}
+                  </td>
+                  <td>{{ slip.total_bayar }}</td>
+                  <td>{{ slip.status_pembayaran }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="6" class="text-center">
+                    Belum ada data slip pembayaran
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>

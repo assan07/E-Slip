@@ -1,0 +1,91 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staf Prodi | Unidayan</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+          <div class="position-sticky d-flex flex-column" style="height: 100vh">
+            <div>
+              <div class="d-flex align-items-center p-3">
+                <img src="../../assest/img/logo.png" alt="logo" class="logo" />
+              </div>
+              <ul class="nav flex-column">
+                <li class="nav-item">
+                  <a class="nav-link" href="dashboard.html">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="stafloket.html">Data Staf Loket</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link active" href="stafprodi.html"
+                    >Data Staf Prodi</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="datamahasiswa.html"
+                    >Data Mahasiswa</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">Logout</a>
+                </li>
+              </ul>
+            </div>
+            <div
+              class="user-info p-3 mt-auto"
+              style="background-color: white; color: navy"
+            >
+              <p class="mb-0">Login in as:</p>
+              <p class="font-weight-bold mb-0">Achmad Hasanudin</p>
+            </div>
+          </div>
+        </nav>
+        <!-- Main Content -->
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+          <div
+            class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3"
+          >
+            <div class="input-group" style="max-width: 300px">
+              <input type="text" class="form-control" placeholder="Search" />
+              <div class="input-group-append">
+                <button class="btn btn-secondary" type="button">Search</button>
+              </div>
+            </div>
+            <button class="btn btn-secondary">Tambah Staf</button>
+          </div>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>NIP</th>
+                <th>Email</th>
+                <th>No. Hp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Achmad</td>
+                <td>2265062</td>
+                <td>example_1@gmail.com</td>
+                <td>0812345678</td>
+              </tr>
+            </tbody>
+          </table>
+        </main>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>
