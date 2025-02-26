@@ -3,98 +3,161 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>E-slip Universitas Dayanu Ikhsanuddin</title>
+    <title>Register - E-slip Universitas Dayanu Ikhsanuddin</title>
     <link
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <style>
-      body {
-        background-color: #f8f9fa;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-      .container {
-        height: 100vh;
+      body,
+      html {
+        height: 100%;
+        width: 100%;
+        font-family: Arial, sans-serif;
+      }
+      .container-body {
         display: flex;
-        align-items: center;
-        justify-content: center;
+        height: 100vh;
       }
       .left-side {
         width: 50%;
-        background-color: white;
-        padding: 20px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
         text-align: center;
+        padding: 40px;
+        animation: slideIn 0.5s ease-in-out;
       }
       .right-side {
         width: 50%;
-        background-color: #e9ecef;
-        padding: 20px;
-        text-align: center;
+        background: linear-gradient(135deg, #4caf50, #2e7d32);
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        animation: slideIn 0.5s ease-in-out;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      .form-container {
+        width: 80%;
+        max-width: 400px;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        color: black;
+      }
+      .form-group span {
+        color: red;
+        font-size: 14px;
       }
     </style>
   </head>
   <body>
     <div class="container-body">
-      <div class="container">
-        <div class="left-side">
-          <h2>Selamat datang di aplikasi E-slip</h2>
-          <h3>Universitas Dayanu Ikhsanuddin</h3>
-          <a href="/mahasiswa/login_mahasiswa"><button>Login</button></a>
-        </div>
-        <div class="right-side">
-          {% with messages = get_flashed_messages(with_categories=true) %} {% if
-          messages %} {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">{{ message }}</div>
-          {% endfor %} {% endif %} {% endwith %}
+      <!-- Bagian kiri dengan gradasi biru -->
+      <div class="left-side">
+        <h2>Selamat Datang di E-Slip</h2>
+        <p>Universitas Dayanu Ikhsanuddin</p>
+        <a href="/mahasiswa/login_mahasiswa" class="btn btn-light mt-3"
+          >Sudah Punya Akun? Login</a
+        >
+      </div>
+
+      <!-- Bagian kanan dengan form registrasi -->
+      <div class="right-side">
+        <div class="form-container">
+          <h3 class="text-center">Registrasi Mahasiswa</h3>
           <form action="{{ url_for('register_mahasiswa') }}" method="POST">
             <div class="form-group">
-              <label for="username">Nama Mahasiswa</label>
+              <label for="namaMahasiswa">Nama Mahasiswa</label>
               <input
                 type="text"
                 class="form-control"
                 id="namaMahasiswa"
                 name="namaMahasiswa"
-                placeholder="Nama Mahasiswa"
+                placeholder="Masukkan Nama Mahasiswa"
+                required
               />
+              {% if session.get('error_nama') %}
+              <span id="error-nama">{{ session.pop('error_nama') }}</span>
+              {% endif %}
             </div>
             <div class="form-group">
-              <label for="username">NIM Mahasiswa</label>
+              <label for="nimMahasiswa">NIM Mahasiswa</label>
               <input
                 type="text"
                 class="form-control"
                 id="nimMahasiswa"
                 name="nimMahasiswa"
-                placeholder="NIM Mahasiswa"
+                placeholder="Masukkan NIM"
+                required
               />
+              {% if session.get('error_nim') %}
+              <span id="error-nim">{{ session.pop('error_nim') }}</span>
+              {% endif %}
             </div>
             <div class="form-group">
-              <label for="useremail">Email</label>
+              <label for="emailMahasiswa">Email</label>
               <input
                 type="email"
                 class="form-control"
                 id="emailMahasiswa"
                 name="emailMahasiswa"
-                placeholder="email"
+                placeholder="Masukkan Email"
+                required
               />
+              {% if session.get('error_email') %}
+              <span id="error-email">{{ session.pop('error_email') }}</span>
+              {% endif %}
             </div>
             <div class="form-group">
-              <label for="password">Password</label>
+              <label for="passwordMahasiswa">Password</label>
               <input
                 type="password"
-                class="form-control"
+                class="form-control password-field"
                 id="passwordMahasiswa"
                 name="passwordMahasiswa"
-                placeholder="password"
+                placeholder="Masukkan Password"
+                required
               />
+              {% if session.get('error_password') %}
+              <span id="error-password"
+                >{{ session.pop('error_password') }}</span
+              >
+              {% endif %}
             </div>
             <div class="form-group">
-              <label for="confirmPassword">Confirm Password</label>
+              <label for="confirmPassword">Konfirmasi Password</label>
               <input
                 type="password"
-                class="form-control"
+                class="form-control password-field"
                 id="confirmPassword"
                 name="confirmPassword"
-                placeholder="confirm password"
+                placeholder="Konfirmasi Password"
+                required
               />
+              {% if session.get('error_confirm') %}
+              <span id="error-confirm">{{ session.pop('error_confirm') }}</span>
+              {% endif %}
             </div>
             <div class="form-check">
               <input
@@ -103,16 +166,48 @@
                 id="showPassword"
               />
               <label class="form-check-label" for="showPassword"
-                >Show Password</label
+                >Tampilkan Password</label
               >
             </div>
-            <button type="submit" class="btn btn-primary btn-block">
-              Simpan
+            <button type="submit" class="btn btn-primary btn-block mt-3">
+              Daftar
             </button>
           </form>
         </div>
       </div>
     </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const fields = [
+          { input: "namaMahasiswa", error: "error-nama" },
+          { input: "nimMahasiswa", error: "error-nim" },
+          { input: "emailMahasiswa", error: "error-email" },
+          { input: "passwordMahasiswa", error: "error-password" },
+          { input: "confirmPassword", error: "error-confirm" },
+        ];
+
+        fields.forEach(({ input, error }) => {
+          const inputField = document.getElementById(input);
+          const errorSpan = document.getElementById(error);
+
+          if (inputField && errorSpan) {
+            inputField.addEventListener("input", function () {
+              errorSpan.style.display = "none";
+            });
+          }
+        });
+
+        // Show/hide password
+        document
+          .getElementById("showPassword")
+          .addEventListener("change", function () {
+            document.querySelectorAll(".password-field").forEach((input) => {
+              input.type = this.checked ? "text" : "password";
+            });
+          });
+      });
+    </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>

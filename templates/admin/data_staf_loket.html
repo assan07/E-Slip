@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staf Loket | Unidayan</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+          <div class="position-sticky d-flex flex-column" style="height: 100vh">
+            <div>
+              <div class="d-flex align-items-center p-3">
+                <img
+                  src="{{ url_for('static', filename='assest/img/logo.png') }}"
+                  alt="logo"
+                  class="logo"
+                />
+              </div>
+              <ul class="nav flex-column">
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('dashboard_admin') }}"
+                    >Dashboard</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a
+                    class="nav-link active"
+                    href="{{ url_for('data_staf_loket') }}"
+                    >Data Staf Loket</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="stafprodi.html">Data Staf Prodi</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="datamahasiswa.html"
+                    >Data Mahasiswa</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">Logout</a>
+                </li>
+              </ul>
+            </div>
+            <div
+              class="user-info p-3 mt-auto"
+              style="background-color: white; color: navy"
+            >
+              <p class="mb-0">Login in as:</p>
+              <p class="font-weight-bold mb-0">Achmad Hasanudin</p>
+            </div>
+          </div>
+        </nav>
+        <!-- Main Content -->
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+          <div
+            class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3"
+          >
+            <div class="input-group" style="max-width: 300px">
+              <input type="text" class="form-control" placeholder="Search" />
+              <div class="input-group-append">
+                <button class="btn btn-secondary" type="button">Search</button>
+              </div>
+            </div>
+            <button
+              class="btn btn-secondary"
+              data-toggle="modal"
+              data-target="#tambahStafModal"
+            >
+              Tambah Staf
+            </button>
+          </div>
+          <!-- Modal Tambah Staf -->
+          <div
+            class="modal fade"
+            id="tambahStafModal"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="tambahStafModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog" role="document">
+              <form action="{{ url_for('tambah_staf_loket') }}" method="POST">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="tambahStafModalLabel">
+                      Tambah Staf Loket
+                    </h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label for="nama_staf_loket">Nama Staf Loket</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="nama_staf_loket"
+                        id="nama_staf_loket"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="nip_staf_loket">NIP Staf Loket</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="nip_staf_loket"
+                        id="nip_staf_loket"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="email_staf_loket">Email Staf Loket</label>
+                      <input
+                        type="email"
+                        class="form-control"
+                        name="email_staf_loket"
+                        id="email_staf_loket"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="no_staf_loket">No. Hp Staf Loket</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="no_staf_loket"
+                        id="no_staf_loket"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="password_staf_loket"
+                        >Password Staf Loket</label
+                      >
+                      <input
+                        type="password"
+                        class="form-control"
+                        name="password_staf_loket"
+                        id="password_staf_loket"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-dismiss="modal"
+                    >
+                      Batal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <h2 class="h5">Data Staf Loket</h2>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>NIP</th>
+                <th>Email</th>
+                <th>No. Hp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in staf %}
+              <tr>
+                <td>{{ s.nama_staf_loket }}</td>
+                <td>{{ s.nip_staf_loket }}</td>
+                <td>{{ s.email_staf_loket }}</td>
+                <td>{{ s.no_staf_loket }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center">
+                  Belum ada data staf loket
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </main>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>

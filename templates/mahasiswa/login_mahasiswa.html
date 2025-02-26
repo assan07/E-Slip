@@ -8,67 +8,128 @@
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
+
     <style>
-      body {
+      /* Fullscreen Layout */
+      body,
+      html {
+        height: 100%;
+        margin: 0;
         background-color: #f8f9fa;
       }
-      .container {
-        height: 100vh;
+
+      .container-body {
         display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 100vw;
+        height: 100vh;
       }
+
+      /* Bagian kiri */
       .left-side {
         width: 50%;
         background-color: white;
-        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
         text-align: center;
       }
+
+      /* Bagian kanan */
       .right-side {
         width: 50%;
-        background-color: #e9ecef;
-        padding: 20px;
-        text-align: center;
+        background: linear-gradient(135deg, #28a745, #218838);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        color: white;
+      }
+
+      .form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 400px;
+        color: black;
+      }
+
+      .form-control {
+        font-size: 18px;
+        padding: 12px;
+        border-radius: 6px;
+      }
+
+      /* Pesan error */
+      .error-message {
+        color: red;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none;
       }
     </style>
   </head>
   <body>
     <div class="container-body">
-      <div class="container">
-        <div class="left-side">
-          <h2>Selamat datang di aplikasi E-slip</h2>
-          <h3>Universitas Dayanu Ikhsanuddin</h3>
-          <a href="/mahasiswa/register_mahasiswa"><button>Register</button></a>
+      <!-- Bagian Kiri -->
+      <div class="left-side">
+        <h2>Selamat datang di aplikasi E-Slip</h2>
+        <h3>Universitas Dayanu Ikhsanuddin</h3>
+        <div class="row gap-5">
+          <a
+            href="/mahasiswa/register_mahasiswa"
+            class="btn btn-success btn-lg mt-3"
+            >Register</a
+          >
+          <a href="/" class="btn btn-primary btn-lg mt-3">Menu Utama</a>
         </div>
-        <div class="right-side">
+      </div>
+
+      <!-- Bagian Kanan -->
+      <div class="right-side">
+        <div class="form-container">
+          <h4 class="text-center mb-4">Login Mahasiswa</h4>
+
           <form action="{{ url_for('login_mahasiswa') }}" method="POST">
-            {% with messages = get_flashed_messages(with_categories=true) %} {%
-            if messages %} {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %} {% endif %} {% endwith %}
+            <!-- Input NIM -->
             <div class="form-group">
-              <label for="username">NIM Mahasiswa</label>
+              <label for="nimMahasiswa">NIM Mahasiswa</label>
               <input
                 type="text"
-                class="form-control"
-                id="username"
+                class="form-control {% if error_nim %} is-invalid {% endif %}"
+                id="nimMahasiswa"
                 name="nimMahasiswa"
-                placeholder="NIM Mahasiswa"
+                placeholder="Masukkan NIM"
                 required
               />
-            </div>
-            <div class="form-group">
-              <label for="password">Password</label>
-              <input
-                type="password"
-                class="form-control"
-                id="passwordMahasiswa"
-                name="passwordMahasiswa"
-                placeholder="Password Mahasiswa"
-                required
-              />
+              {% if error_nim %}
+              <span class="error-message" id="error-nim">{{ error_nim }}</span>
+              {% endif %}
             </div>
 
+            <!-- Input Password -->
+            <div class="form-group">
+              <label for="passwordMahasiswa">Password</label>
+              <input
+                type="password"
+                class="form-control {% if error_password %} is-invalid {% endif %}"
+                id="passwordMahasiswa"
+                name="passwordMahasiswa"
+                placeholder="Masukkan Password"
+                required
+              />
+              {% if error_password %}
+              <span class="error-message" id="error-password"
+                >{{ error_password }}</span
+              >
+              {% endif %}
+            </div>
+
+            <!-- Checkbox Show Password -->
             <div class="form-check">
               <input
                 type="checkbox"
@@ -76,19 +137,45 @@
                 id="showPassword"
               />
               <label class="form-check-label" for="showPassword"
-                >Show Password</label
+                >Tampilkan Password</label
               >
             </div>
-            <button type="submit" class="btn btn-primary btn-block">
-              Simpan
+
+            <!-- Tombol Login -->
+            <button type="submit" class="btn btn-primary btn-block mt-3">
+              Login
             </button>
           </form>
         </div>
       </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      document
+        .getElementById("showPassword")
+        .addEventListener("change", function () {
+          var passwordInput = document.getElementById("passwordMahasiswa");
+          passwordInput.type = this.checked ? "text" : "password";
+        });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const nimInput = document.getElementById("nimMahasiswa");
+        const passwordInput = document.getElementById("passwordMahasiswa");
+        const nimError = document.getElementById("error-nim");
+        const passwordError = document.getElementById("error-password");
+
+        function hideErrorOnInput(input, errorElement) {
+          input.addEventListener("input", function () {
+            if (errorElement) {
+              errorElement.style.display = "none";
+            }
+          });
+        }
+
+        if (nimInput && nimError) hideErrorOnInput(nimInput, nimError);
+        if (passwordInput && passwordError)
+          hideErrorOnInput(passwordInput, passwordError);
+      });
+    </script>
   </body>
 </html>

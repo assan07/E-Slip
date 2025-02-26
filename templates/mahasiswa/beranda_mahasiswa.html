@@ -1,11 +1,332 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>dashboard mahasiswa</h1>
-</body>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Slip</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css"
+    />
+
+    <style>
+      * {
+        font-family: "Montserrat", sans-serif;
+      }
+
+      body {
+        display: flex;
+        background-color: #f4f6f9;
+      }
+
+      /* Sidebar Styling */
+      .sidebar {
+        width: 250px;
+        height: 100vh;
+        background: linear-gradient(135deg, #2c3e50, #1abc9c);
+        color: white;
+        position: fixed;
+        top: 0;
+        left: 0;
+        padding: 20px;
+        transition: all 0.3s ease-in-out;
+      }
+
+      .sidebar.hide {
+        width: 70px;
+        overflow: hidden;
+      }
+
+      .sidebar h4 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .sidebar .nav-link {
+        color: white;
+        font-size: 16px;
+        margin: 10px 0;
+        display: flex;
+        align-items: center;
+        transition: 0.3s;
+      }
+
+      .sidebar .nav-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+      }
+
+      .sidebar .nav-link i {
+        margin-right: 10px;
+      }
+
+      .sidebar .submenu {
+        display: none;
+        padding-left: 20px;
+      }
+
+      .sidebar .nav-link.active + .submenu {
+        display: block;
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-left: 250px;
+        flex-grow: 1;
+        padding: 20px;
+        transition: all 0.3s ease-in-out;
+      }
+
+      .main-content.shift {
+        margin-left: 70px;
+      }
+
+      /* Header */
+      .header {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Toggle Button */
+      .toggle-btn {
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+      }
+
+      .toggle-btn i {
+        transition: transform 0.3s;
+      }
+
+      .hide .toggle-btn i {
+        transform: rotate(180deg);
+      }
+
+      /* Welcome Section */
+      .content {
+        margin-top: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .profile {
+        text-align: center;
+        margin-top: auto;
+        padding-top: 20px;
+      }
+
+      .profile p {
+        margin-bottom: 5px;
+      }
+
+      /* Styling Overlay */
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .overlay.show {
+        display: flex;
+        animation: fadeIn 0.3s;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* Card Styling */
+      .notification-card {
+        background: white;
+        width: 400px;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+
+      /* Button Delete */
+      .delete-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: transparent;
+        border: none;
+        font-size: 1.2rem;
+        color: red;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      .delete-btn:hover {
+        color: darkred;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+      </button>
+      <h4>E-Slip</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="/mahasiswa/beranda_mahasiswa"
+          ><i class="bi bi-house-door"></i> Beranda</a
+        >
+        <a class="nav-link" href="/mahasiswa/data_mahasiswa"
+          ><i class="bi bi-person"></i> Data Mahasiswa</a
+        >
+        <a class="nav-link" href="/mahasiswa/unggah_slip"
+          ><i class="bi bi-cloud-arrow-up"></i> Unggah Slip</a
+        >
+        <a class="nav-link" onclick="toggleSubMenu(event)"
+          ><i class="bi bi-folder"></i> Arsip Slip</a
+        >
+        <div class="submenu">
+          <a class="nav-link" href="/mahasiswa/arsip_slip_Loket"
+            ><i class="bi bi-file-earmark"></i> Slip Loket</a
+          >
+          <a class="nav-link" href="/mahasiswa/arsip_slip_prodi"
+            ><i class="bi bi-file-earmark-text"></i> Slip Prodi</a
+          >
+          <a class="nav-link" href="/mahasiswa/arsip_slip_mahasiswa"
+            ><i class="bi bi-file-earmark-person"></i> Slip Mahasiswa</a
+          >
+        </div>
+        <a class="nav-link" href="/logout"
+          ><i class="bi bi-box-arrow-right"></i> Logout</a
+        >
+      </nav>
+
+      <div class="profile">
+        <p>Login sebagai:</p>
+        <strong>{{ user.nama_mahasiswa }}</strong>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+      <div class="header">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search..."
+          style="width: 300px"
+        />
+        <button class="btn btn-light" id="openNotification">
+          <i class="bi bi-bell"></i>
+        </button>
+      </div>
+      <!-- Overlay untuk Form Notifikasi -->
+      <div class="overlay" id="notificationOverlay">
+        <div class="notification-card">
+          <button class="delete-btn" id="closeNotification">
+            <i class="bi bi-x-circle"></i>
+          </button>
+          <h5><i class="bi bi-chat-left-text"></i> Notifikasi</h5>
+          <hr />
+          <div id="notificationList">
+            <div
+              class="alert alert-info d-flex justify-content-between align-items-center"
+            >
+              <span
+                ><i class="bi bi-exclamation-circle"></i>{{ msg.pesan_informasi }}</span
+              >
+              <button class="btn btn-sm btn-outline-danger delete-notif">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <h1>Selamat Datang di E-Slip Universitas Dayanu Ikhsanuddin</h1>
+        <p>
+          Aplikasi ini membantu mahasiswa dalam mengarsipkan slip pembayaran
+          dengan mudah dan efisien. Dengan fitur yang interaktif dan
+          user-friendly, Anda dapat mengelola slip pembayaran dengan lebih rapi.
+        </p>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      function toggleSidebar() {
+        let sidebar = document.getElementById("sidebar");
+        let mainContent = document.getElementById("main-content");
+
+        sidebar.classList.toggle("hide");
+        mainContent.classList.toggle("shift");
+      }
+
+      function toggleSubMenu(event) {
+        event.preventDefault();
+        let parent = event.target.closest(".nav-link");
+        parent.classList.toggle("active");
+      }
+
+      // Notifikasi
+      // Menampilkan overlay ketika tombol notifikasi diklik
+      document
+        .getElementById("openNotification")
+        .addEventListener("click", function () {
+          document.getElementById("notificationOverlay").classList.add("show");
+        });
+
+      // Menutup overlay ketika tombol close diklik
+      document
+        .getElementById("closeNotification")
+        .addEventListener("click", function () {
+          document
+            .getElementById("notificationOverlay")
+            .classList.remove("show");
+        });
+
+      // Menghapus notifikasi saat tombol delete ditekan
+      document.querySelectorAll(".delete-notif").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          this.parentElement.remove();
+        });
+      });
+    </script>
+  </body>
 </html>

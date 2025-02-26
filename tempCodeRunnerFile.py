@@ -1,1 +1,1 @@
-slip_arsip_prodi
+/admin/login_admin

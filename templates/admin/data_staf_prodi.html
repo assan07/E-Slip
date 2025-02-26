@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Staf prodi | Unidayan</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+          <div class="position-sticky d-flex flex-column" style="height: 100vh">
+            <div>
+              <div class="d-flex align-items-center p-3">
+                <img
+                  src="{{ url_for('static', filename='assest/img/logo.png') }}"
+                  alt="logo"
+                  class="logo"
+                />
+              </div>
+              <ul class="nav flex-column">
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('dashboard_admin') }}"
+                    >Dashboard</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a
+                    class="nav-link active"
+                    href="{{ url_for('data_staf_prodi') }}"
+                    >Data Staf prodi</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="stafprodi.html">Data Staf Prodi</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="datamahasiswa.html"
+                    >Data Mahasiswa</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#">Logout</a>
+                </li>
+              </ul>
+            </div>
+            <div
+              class="user-info p-3 mt-auto"
+              style="background-color: white; color: navy"
+            >
+              <p class="mb-0">Login in as:</p>
+              <p class="font-weight-bold mb-0">Achmad Hasanudin</p>
+            </div>
+          </div>
+        </nav>
+        <!-- Main Content -->
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+          <div
+            class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3"
+          >
+            <div class="input-group" style="max-width: 300px">
+              <input
+                type="text"
+                id="searchInput"
+                class="form-control"
+                placeholder="Search"
+              />
+              <div class="input-group-append">
+                <button id="searchBtn" class="btn btn-secondary" type="button">
+                  Search
+                </button>
+              </div>
+            </div>
+            <button
+              class="btn btn-secondary"
+              data-toggle="modal"
+              data-target="#tambahStafModal"
+            >
+              Tambah Staf
+            </button>
+          </div>
+          <!-- Modal Tambah Staf -->
+          <div
+            class="modal fade"
+            id="tambahStafModal"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="tambahStafModalLabel"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog" role="document">
+              <form action="{{ url_for('tambah_staf_prodi') }}" method="POST">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="tambahStafModalLabel">
+                      Tambah Staf prodi
+                    </h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label for="nama_staf_prodi">Nama Staf prodi</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="nama_staf_prodi"
+                        id="nama_staf_prodi"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="nip_staf_prodi">NIP Staf prodi</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="nip_staf_prodi"
+                        id="nip_staf_prodi"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="email_staf_prodi">Email Staf prodi</label>
+                      <input
+                        type="email"
+                        class="form-control"
+                        name="email_staf_prodi"
+                        id="email_staf_prodi"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="no_staf_prodi">No. Hp Staf prodi</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="no_staf_prodi"
+                        id="no_staf_prodi"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="password_staf_prodi"
+                        >Password Staf prodi</label
+                      >
+                      <input
+                        type="password"
+                        class="form-control"
+                        name="password_staf_prodi"
+                        id="password_staf_prodi"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-dismiss="modal"
+                    >
+                      Batal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      Simpan
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <h2 class="h5">Data Staf prodi</h2>
+          <table class="table table-hover table-bordered" id="resultTable">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>NIP</th>
+                <th>Email</th>
+                <th>No. Hp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for staff in staf %}
+              <tr>
+                <td>{{ staff.nama_staf_prodi }}</td>
+                <td>{{ staff.nip_staf_prodi }}</td>
+                <td>{{ staff.email_staf_prodi }}</td>
+                <td>{{ staff.no_staf_prodi }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center">
+                  Belum ada data staf prodi
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </main>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function () {
+        $("#searchBtn").click(function () {
+          var query = $("#searchInput").val().trim();
+          $.getJSON(
+            "{{ url_for('search_staf_prodi') }}",
+            { q: query },
+            function (data) {
+              var tbody = $("#resultTable tbody");
+              tbody.empty(); // Kosongkan tabel sebelumnya
+
+              if (data.length > 0) {
+                $.each(data, function (i, staff) {
+                  var row =
+                    "<tr>" +
+                    "<td>" +
+                    staff.nama_staf_prodi +
+                    "</td>" +
+                    "<td>" +
+                    staff.nim_staf_prodi +
+                    "</td>" +
+                    "<td>" +
+                    staff.email_staf_prodi +
+                    "</td>" +
+                    "<td>" +
+                    staff.no_staf_prodi +
+                    "</td>" +
+                    "</tr>";
+                  tbody.append(row);
+                });
+              } else {
+                tbody.append(
+                  '<tr><td colspan="4" class="text-center">Tidak ada data</td></tr>'
+                );
+              }
+            }
+          );
+        });
+      });
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>

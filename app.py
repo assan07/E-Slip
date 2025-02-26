@@ -1,6 +1,6 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash, send_from_directory
+from flask import Flask, render_template, redirect, url_for, request, session, flash, send_from_directory, jsonify
 import mysql.connector
-from mysql.connector import Error
+from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
@@ -26,53 +26,29 @@ def get_db_connection():
         print("Error while connecting to MySQL", e)
         return None
 
+#Middleware untuk Cek seasson login  
+@app.context_processor
+def inject_user():
+    if 'mahasiswa' in session:
+        nim = session.get("mahasiswa")  # NIM disimpan di session dengan key 'mahasiswa'
+        full_name = session.get("full_name", nim)
+        profile_pic = session.get("profile_pic", "images/profile_pics/default_profile.png")
+        return {
+            "nim": nim,
+            "full_name": full_name,
+            "profile_pic": url_for('static', filename=profile_pic)
+        }
+    return {"nim": None, "full_name": None, "profile_pic": None}
+
+
 @app.route('/')
+
 def first_menu():
     return render_template('home/first_menu.html')
 
+# Route login staf loket
 @app.route('/loket/login_staf_loket')
 def login_staf_loket():
-    if request.method == 'POST':
-        # Ambil data dari form login dan hapus spasi ekstra
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '').strip()
-        
-        # Debug: Cetak nilai yang diterima (gunakan repr() untuk menampilkan karakter tersembunyi)
-        print(f"Debug: username = {repr(username)}, password = {repr(password)}")
-        
-        # Hubungkan ke database
-        conn = get_db_connection()
-        if conn is None:
-            flash("Gagal terhubung ke database", "danger")
-            return redirect(url_for('login_staf_loket'))
-        
-        cursor = conn.cursor(dictionary=True, buffered=True)
-        query = "SELECT * FROM staf_loket WHERE username = %s"
-        cursor.execute(query, (username,))
-        user = cursor.fetchone()
-        print("Debug: User fetched =", user)
-        cursor.close()
-        conn.close()
-        
-        if user is None:
-            flash("Username salah", "danger")
-            return redirect(url_for('login_staf_loket'))
-        
-        # Ambil hash password yang tersimpan dan hapus spasi ekstra
-        stored_hash = user.get('password', '').strip()
-        print("Debug: Stored hash:", repr(stored_hash))
-        
-        # Verifikasi password menggunakan stored_hash
-        if not check_password_hash(stored_hash, password):
-            flash("Password salah", "danger")
-            print("Debug: Password salah")
-            return redirect(url_for('login_staf_loket'))
-        
-        # Jika validasi berhasil, simpan username ke session dan re direct
-        session['loket'] = user['username']
-        flash("Login berhasil!", "success")
-        return redirect(url_for('dashboard_loket'))
-    
     return render_template('loket/login_staf_loket.html')
 
 # Route untuk dashboard loket
@@ -329,29 +305,29 @@ def kirim_pesan_prodi():
     
     return render_template('prodi/informasi_dari_prodi.html')
 
-# ========================
+# --------------------------
 # Registrasi Mahasiswa
-# ========================
+# --------------------------
 @app.route('/mahasiswa/register_mahasiswa', methods=['GET', 'POST'])
 def register_mahasiswa():
     if request.method == 'POST':
         # Ambil data dari form dan hapus spasi ekstra
-        namaMahasiswa = request.form.get('namaMahasiswa', '').strip()
-        nimMahasiswa = request.form.get('nimMahasiswa', '').strip()
-        emailMahasiswa = request.form.get('emailMahasiswa', '').strip()
+        namaMahasiswa   = request.form.get('namaMahasiswa', '').strip()
+        nimMahasiswa    = request.form.get('nimMahasiswa', '').strip()
+        emailMahasiswa  = request.form.get('emailMahasiswa', '').strip()
         passwordMahasiswa = request.form.get('passwordMahasiswa', '').strip()
-        confirm_password = request.form.get('confirmPassword', '').strip()
+        confirm_password  = request.form.get('confirmPassword', '').strip()
 
-        # Validasi: cek kecocokan password
+        # Validasi kecocokan password
         if passwordMahasiswa != confirm_password:
             flash("Password tidak cocok", "danger")
             return redirect(url_for('register_mahasiswa'))
 
-        # Hash password menggunakan generate_password_hash (default method: pbkdf2:sha256)
-        hashed_password = generate_password_hash(passwordMahasiswa)
-        print("Debug (register): Hashed password:", hashed_password)
+        # Hash password menggunakan generate_password_hash dengan default (pbkdf2:sha256)
+        hashed_password = generate_password_hash(passwordMahasiswa, method='pbkdf2:sha256')
 
-        # Hubungkan ke database
+        print("DEBUG (Register): Hashed password:", hashed_password)
+
         conn = get_db_connection()
         if conn is None:
             flash("Gagal terhubung ke database", "danger")
@@ -367,10 +343,9 @@ def register_mahasiswa():
                 flash("NIM sudah terdaftar", "danger")
                 return redirect(url_for('register_mahasiswa'))
             
-            # Proses registrasi
+            # Simpan data registrasi ke database
             insert_query = """
-                INSERT INTO data_mahasiswa 
-                (nim_mahasiswa, nama_mahasiswa, email_mahasiswa, password_mahasiswa)
+                INSERT INTO data_mahasiswa (nim_mahasiswa, nama_mahasiswa, email_mahasiswa, password_mahasiswa)
                 VALUES (%s, %s, %s, %s)
             """
             cursor.execute(insert_query, (nimMahasiswa, namaMahasiswa, emailMahasiswa, hashed_password))
@@ -387,70 +362,91 @@ def register_mahasiswa():
     return render_template('mahasiswa/register_mahasiswa.html')
 
 
+# --------------------------
 # Login Mahasiswa
-
+# --------------------------
 @app.route('/mahasiswa/login_mahasiswa', methods=['GET', 'POST'])
 def login_mahasiswa():
     if request.method == 'POST':
-        # Ambil data dari form login dan hapus spasi ekstra
+        # Ambil data dari form dan bersihkan spasi ekstra
         nimMahasiswa = request.form.get('nimMahasiswa', '').strip()
         passwordMahasiswa = request.form.get('passwordMahasiswa', '').strip()
-        
-        # Debug: Cetak nilai yang diterima (gunakan repr() untuk menampilkan karakter tersembunyi)
-        print(f"Debug: nimMahasiswa = {repr(nimMahasiswa)}, passwordMahasiswa = {repr(passwordMahasiswa)}")
-        
-        # Hubungkan ke database
+
+        # Cek koneksi database
         conn = get_db_connection()
         if conn is None:
             flash("Gagal terhubung ke database", "danger")
             return redirect(url_for('login_mahasiswa'))
         
+        # Query data mahasiswa berdasarkan NIM
         cursor = conn.cursor(dictionary=True, buffered=True)
         query = "SELECT * FROM data_mahasiswa WHERE nim_mahasiswa = %s"
         cursor.execute(query, (nimMahasiswa,))
         mahasiswa = cursor.fetchone()
-        print("Debug: User fetched =", mahasiswa)
         cursor.close()
         conn.close()
         
+        # Validasi: NIM tidak ditemukan
         if mahasiswa is None:
-            flash("NIM salah", "danger")
+            session['error_nim'] = "NIM tidak ditemukan"
+            session['error_password'] = None 
+            session['foto_user'] = mahasiswa.get('foto_mahasiswa', None) 
             return redirect(url_for('login_mahasiswa'))
         
-        # Ambil hash password yang tersimpan dan hapus spasi ekstra
+        # Ambil hash password dan validasi
         stored_hash = mahasiswa.get('password_mahasiswa', '').strip()
-        print("Debug: Stored hash:", repr(stored_hash))
-        
-        # Verifikasi password menggunakan stored_hash
         if not check_password_hash(stored_hash, passwordMahasiswa):
-            flash("Password salah", "danger")
-            print("Debug: Password salah")
+            session['error_password'] = "Password salah"
+            session['error_nim'] = None  # Pastikan tidak ada error NIM
             return redirect(url_for('login_mahasiswa'))
         
-        # Jika validasi berhasil, simpan NIM ke session dan redirect
-        # session['mahasiswa'] = mahasiswa['nim_mahasiswa']
-        session['mahasiswa'] = True
+        # Bersihkan error dan set session login
+        session.pop('error_nim', None)
+        session.pop('error_password', None)
+        session['mahasiswa'] = nimMahasiswa
+        session['full_name'] = mahasiswa['nama_mahasiswa']
+        session['profile_pic'] = mahasiswa.get('foto_mahasiswa', "images/profile_pics/default_profile.png")
         flash("Login berhasil!", "success")
         return redirect(url_for('beranda_mahasiswa'))
-    
-    return render_template('mahasiswa/login_mahasiswa.html')
-
+    return render_template('mahasiswa/login_mahasiswa.html', error_nim=session.get('error_nim'), error_password=session.get('error_password'))
 # Route untuk beranda mahasiswa
 @app.route('/mahasiswa/beranda_mahasiswa' , methods=['GET', 'POST'])
+
 def beranda_mahasiswa():
-    return render_template('mahasiswa/beranda_mahasiswa.html')
+    if 'mahasiswa' not in session:
+        flash("Harap login terlebih dahulu", "warning")
+        return redirect(url_for('login_mahasiswa'))
+    
+     # Ambil NIM dari session
+    nim = session['mahasiswa']
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('beranda_mahasiswa'))
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    query = "SELECT * FROM data_mahasiswa WHERE nim_mahasiswa = %s"
+    cursor.execute(query, (nim,))
+    user = cursor.fetchone()
+
+    query1 ="SELECT * FROM pesan_informasi WHERE penerima = %s"
+    cursor.execute(query1, (nim,))
+    msg = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('mahasiswa/beranda_mahasiswa.html', user=user, msg=msg)
 
 # Route untuk data mahasiswa
 @app.route('/mahasiswa/data_mahasiswa' , methods=['GET', 'POST'])
 def data_mahasiswa():
-    # Pastikan mahasiswa sudah login (misalnya, session['mahasiswa'] menyimpan nim)
-    # if 'mahasiswa' not in session:
-    #     flash("Harap login terlebih dahulu", "warning")
-    #     return redirect(url_for('login_mahasiswa'))
+    if 'mahasiswa' not in session:
+        flash("Harap login terlebih dahulu", "warning")
+        return redirect(url_for('login_mahasiswa'))
     
-    # nim = session['mahasiswa']
-    nim ='22650062'
-    
+   # Ambil nim dari session
+    nim = session['mahasiswa'] 
     # Hubungkan ke database
     conn = get_db_connection()
     if conn is None:
@@ -549,81 +545,195 @@ def data_mahasiswa():
     # Render halaman profil dengan data mahasiswa dan sisa cicilan
     return render_template('mahasiswa/data_mahasiswa.html', mahasiswa=mahasiswa, sisa_cicilan=sisa_cicilan)
 
+@app.route('/mahasiswa/ubah_password', methods=['GET', 'POST'])
+def ubah_password():
+    if request.method == 'POST':
+        if 'mahasiswa' not in session:
+            flash("Harap login terlebih dahulu", "warning")
+            return redirect(url_for('login_mahasiswa'))
+        
+        # Ambil data dari form dan hapus spasi ekstra
+        email = request.form.get('email', '').strip()
+        currentPassword = request.form.get('currentPassword', '').strip()
+        newPassword = request.form.get('newPassword', '').strip()
+        confirmPassword = request.form.get('confirmPassword', '').strip()
+        
+        # Validasi: cek apakah newPassword dan confirmPassword sama
+        if newPassword != confirmPassword:
+            flash("Password baru tidak cocok dengan konfirmasi.", "danger")
+            return redirect(url_for('ubah_password'))
+        
+        # Hubungkan ke database
+        conn = get_db_connection()
+        if conn is None:
+            flash("Gagal terhubung ke database.", "danger")
+            return redirect(url_for('ubah_password'))
+        
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        try:
+            # Cari user berdasarkan email
+            query = "SELECT * FROM data_mahasiswa WHERE email_mahasiswa = %s"
+            cursor.execute(query, (email,))
+            user = cursor.fetchone()
+            
+            if user is None:
+                flash("Email tidak ditemukan.", "danger")
+                return redirect(url_for('ubah_password'))
+            
+            stored_hash = user.get('password_mahasiswa', '').strip()
+            
+            # Verifikasi password saat ini
+            if not check_password_hash(stored_hash, currentPassword):
+                flash("Password saat ini salah.", "danger")
+                return redirect(url_for('ubah_password'))
+            
+            # Jika valid, buat hash untuk password baru
+            new_hashed = generate_password_hash(newPassword, method='pbkdf2:sha256')
+            
+            # Update password di database
+            update_query = "UPDATE data_mahasiswa SET password_mahasiswa = %s WHERE email_mahasiswa = %s"
+            cursor.execute(update_query, (new_hashed, email))
+            conn.commit()
+            flash("Password berhasil diubah.", "success")
+        except Exception as e:
+            conn.rollback()
+            flash("Gagal mengubah password: " + str(e), "danger")
+        finally:
+            cursor.close()
+            conn.close()
+        return redirect(url_for('ubah_password'))
+    
+    return render_template('mahasiswa/ubah_password.html')
+
 # Route untuk arsip_Slip_loket
 @app.route('/mahasiswa/arsip_slip_Loket' , methods=['GET', 'POST'])
 def arsip_slip_loket():
+    if 'mahasiswa' not in session:
+        flash("Harap login terlebih dahulu", "warning")
+        return redirect(url_for('login_mahasiswa'))
+   
+    # Ambil NIM dari session
+    nim = session['mahasiswa']
+    
     # Hubungkan ke database
     conn = get_db_connection()
     if conn is None:
         flash("Gagal terhubung ke database", "danger")
-        return redirect(url_for('first_menu'))
+        return redirect(url_for('beranda_mahasiswa'))
     
-    # Buat cursor buffered untuk mengambil data sebagai dictionary
     cursor = conn.cursor(dictionary=True, buffered=True)
     
-    # Query untuk mengambil semua data dari tabel slip_pembayaran
-    query = "SELECT * FROM slip_pembayaran"
-    cursor.execute(query)
+    # Ambil data profil mahasiswa
+    query = "SELECT * FROM data_mahasiswa WHERE nim_mahasiswa = %s"
+    cursor.execute(query, (nim,))
+    user = cursor.fetchone()
+    
+    # Ambil data slip pembayaran hanya untuk user yang login
+    query2 = "SELECT * FROM slip_pembayaran WHERE nim_mahasiswa = %s"
+    cursor.execute(query2, (nim,))
     slips = cursor.fetchall()
     
     cursor.close()
     conn.close()
     
     # Render template dan kirim data yang telah diambil
-    return render_template('mahasiswa/arsip_slip_loket.html', slips=slips)
+    return render_template('mahasiswa/arsip_slip_loket.html', slips=slips, user=user)
 
 # Route untuk arsip_Slip_prodi
 @app.route('/mahasiswa/arsip_slip_prodi' , methods=['GET', 'POST']) 
 def arsip_slip_prodi():
+    if 'mahasiswa' not in session:
+        flash("Harap login terlebih dahulu", "warning")
+        return redirect(url_for('login_mahasiswa'))
+   
+    # Ambil NIM dari session
+    nim = session['mahasiswa']
+    
+    # Hubungkan ke database
     conn = get_db_connection()
     if conn is None:
         flash("Gagal terhubung ke database", "danger")
-        return redirect(url_for('first_menu'))
+        return redirect(url_for('beranda_mahasiswa'))
     
-    # Buat cursor buffered untuk mengambil data sebagai dictionary
     cursor = conn.cursor(dictionary=True, buffered=True)
     
-    # Query untuk mengambil semua data dari tabel slip_pembayaran
-    query = "SELECT * FROM slip_pembayaran"
-    cursor.execute(query)
+    # Ambil data profil mahasiswa
+    query = "SELECT * FROM data_mahasiswa WHERE nim_mahasiswa = %s"
+    cursor.execute(query, (nim,))
+    user = cursor.fetchone()
+    
+    # Ambil data slip pembayaran hanya untuk user yang login
+    query2 = "SELECT * FROM slip_pembayaran WHERE nim_mahasiswa = %s"
+    cursor.execute(query2, (nim,))
     slips = cursor.fetchall()
     
     cursor.close()
     conn.close()
     
-    return render_template('mahasiswa/beranda_mahasiswa.html', slips=slips)
+    return render_template('mahasiswa/arsip_prodi.html', slips=slips, user= user)
 
 # Route untuk arsip_Slip_Mahasiswa
-@app.route('/mahasiswa/arsip_slip_mahasiswa' , methods=['GET', 'POST'])
+@app.route('/mahasiswa/arsip_slip_mahasiswa', methods=['GET', 'POST'])
 def arsip_slip_mahasiswa():
+    if 'mahasiswa' not in session:
+        flash("Harap login terlebih dahulu", "warning")
+        return redirect(url_for('login_mahasiswa'))
+   
+    # Ambil NIM dari session
+    nim = session['mahasiswa']
+    
+    # Hubungkan ke database
     conn = get_db_connection()
     if conn is None:
         flash("Gagal terhubung ke database", "danger")
-        return redirect(url_for('first_menu'))
+        return redirect(url_for('beranda_mahasiswa'))
     
-    # Buat cursor buffered untuk mengambil data sebagai dictionary
     cursor = conn.cursor(dictionary=True, buffered=True)
     
-    # Query untuk mengambil semua data dari tabel slip_pembayaran
-    query = "SELECT * FROM slip_pembayaran"
-    cursor.execute(query)
+    # Ambil data profil mahasiswa
+    query = "SELECT * FROM data_mahasiswa WHERE nim_mahasiswa = %s"
+    cursor.execute(query, (nim,))
+    user = cursor.fetchone()
+    
+    # Ambil data slip pembayaran hanya untuk user yang login
+    query2 = "SELECT * FROM slip_pembayaran WHERE nim_mahasiswa = %s"
+    cursor.execute(query2, (nim,))
     slips = cursor.fetchall()
     
     cursor.close()
     conn.close()
-    return render_template('mahasiswa/arsip_mahasiswa.html', slips=slips)
+    
+    return render_template('mahasiswa/arsip_mahasiswa.html', slips=slips, user=user)
+
+
 
 # Route untuk Stor Slip
-@app.route('/mahasiswa/store_slip' , methods=['GET', 'POST'])
-def stor_slip():
+@app.route('/mahasiswa/unggah_slip', methods=['GET', 'POST'])
+def unggah_slip():
+    if 'mahasiswa' not in session:
+        flash("Harap login terlebih dahulu", "warning")
+        return redirect(url_for('login_mahasiswa'))
+    
+    # Ambil NIM dari session
+    nim = session['mahasiswa']
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('beranda_mahasiswa'))
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    query = "SELECT * FROM data_mahasiswa WHERE nim_mahasiswa = %s"
+    cursor.execute(query, (nim,))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
     if request.method == 'POST':
-        
         # Ambil data teks dari form dan hapus spasi ekstra
         fullName = request.form.get('fullNameMahasiswa', '').strip()
         email = request.form.get('emailMahasiswa', '').strip()
         phone = request.form.get('phoneMahasiswa', '').strip()
         semester = request.form.get('semesterMahasiswa', '').strip()
-        paymentCycle = request.form.get('paymentCycle', '').strip()
+        paymentCycle = request.form.get('paymentCycle', '').strip()  # disimpan ke kolom cicilan_pembayaran
         studentNumber = request.form.get('studentNumber', '').strip()
         totalPay = request.form.get('totalPay', '').strip()
 
@@ -631,31 +741,29 @@ def stor_slip():
         slip_loket_file = request.files.get('slip_loket')
         slip_prodi_file = request.files.get('slip_prodi')
         slip_mahasiswa_file = request.files.get('slip_mahasiswa')
-       
 
-        # Inisialisasi nama file untuk disimpan ke database
-        slip_loket_filename = studentNumber + '_loket'
-        slip_prodi_filename = studentNumber + '_prodi'  
-        slip_mahasiswa_filename = studentNumber + '_mahasiswa'
+        # Inisialisasi nama file dengan dasar studentNumber
+        slip_loket_filename = studentNumber + '_arsip_slip_loket'
+        slip_prodi_filename = studentNumber + '_arsip_slip_prodi'
+        slip_mahasiswa_filename = studentNumber + '_arsip_slip_mahasiswa'
        
-
         if slip_loket_file and slip_loket_file.filename:
             ext = os.path.splitext(slip_loket_file.filename)[1]
-            slip_loket_filename = secure_filename(studentNumber + 'arsip_slip_loket' + ext)
+            slip_loket_filename = secure_filename(studentNumber + '_arsip_slip_loket' + ext)
             slip_loket_file.save(os.path.join(app.config['UPLOAD_FOLDER'], slip_loket_filename))
         else:
             slip_loket_filename = None
 
         if slip_prodi_file and slip_prodi_file.filename:
             ext = os.path.splitext(slip_prodi_file.filename)[1]
-            slip_prodi_filename = secure_filename(studentNumber + 'arsip_slip_prodi' + ext)
+            slip_prodi_filename = secure_filename(studentNumber + '_arsip_slip_prodi' + ext)
             slip_prodi_file.save(os.path.join(app.config['UPLOAD_FOLDER'], slip_prodi_filename))
         else:
             slip_prodi_filename = None
 
         if slip_mahasiswa_file and slip_mahasiswa_file.filename:
             ext = os.path.splitext(slip_mahasiswa_file.filename)[1]
-            slip_mahasiswa_filename = secure_filename(studentNumber + 'arsip_slip_mahasiswa' + ext)
+            slip_mahasiswa_filename = secure_filename(studentNumber + '_arsip_slip_mahasiswa' + ext)
             slip_mahasiswa_file.save(os.path.join(app.config['UPLOAD_FOLDER'], slip_mahasiswa_filename))
         else:
             slip_mahasiswa_filename = None
@@ -664,11 +772,10 @@ def stor_slip():
         conn = get_db_connection()
         if conn is None:
             flash("Gagal terhubung ke database", "danger")
-            return redirect(url_for('stor_slip'))
+            return redirect(url_for('unggah_slip'))
         
         cursor = conn.cursor(dictionary=True, buffered=True)
         try:
-           
             insert_query = """
                 INSERT INTO slip_pembayaran (
                     nama_mahasiswa, email_mahasiswa, noHp_mahasiswa, semester, cicilan_pembayaran, nim_mahasiswa, total_bayar, 
@@ -681,23 +788,283 @@ def stor_slip():
             ))
             conn.commit()
             flash("Slip berhasil disimpan!", "success")
-
-            return redirect(url_for('beranda_mahasiswa'))
+            return redirect(url_for('unggah_slip'))
         except Exception as e:
             conn.rollback()
             flash("Gagal menyimpan slip: " + str(e), "danger")
-            return redirect(url_for('stor_slip'))
+            return redirect(url_for('unggah_slip'))
         finally:
             cursor.close()
             conn.close()
         
-    return render_template('mahasiswa/stor_slip.html')
+    return render_template('mahasiswa/stor_slip.html', user=user)
 
-# Route untuk loket
-# Router untuk login staf loket
+# Route untuk logout
+@app.route('/logout')
+def logout():
+    if 'mahasiswa' not in session:
+        flash("Harap login terlebih dahulu", "warning")
+        return redirect(url_for('first_menu')) 
+    # Hapus session (sesuaikan key yang digunakan, misalnya 'mahasiswa' atau 'admin')
+    session.clear()
+    flash("Anda telah logout.", "success")
+    return redirect(url_for('first_menu'))
 
+
+# Route untuk admin
+@app.route('/admin/login_admin', methods=['GET', 'POST'])
+def login_admin():
+    if request.method == 'POST':
+        # Ambil data dari form login dan hapus spasi ekstra
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        # Debug: Cetak nilai yang diterima (gunakan repr() untuk menampilkan karakter tersembunyi)
+        print(f"Debug: username = {repr(username)}, password = {repr(password)}")
+        
+        # Hubungkan ke database
+        conn = get_db_connection()
+        if conn is None:
+            flash("Gagal terhubung ke database", "danger")
+            return redirect(url_for('login_admin'))
+        
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        query = "SELECT * FROM admin WHERE username = %s"
+        cursor.execute(query, (username,))
+        user = cursor.fetchone()
+        print("Debug: User fetched =", user)
+        cursor.close()
+        conn.close()
+        
+        if user is None:
+            flash("Username salah", "danger")
+            return redirect(url_for('login_admin'))
+        
+        # Ambil hash password yang tersimpan dan hapus spasi ekstra
+        stored_hash = user.get('password', '').strip()
+        print("Debug: Stored hash:", repr(stored_hash))
+        
+        # Verifikasi password menggunakan stored_hash
+        if not check_password_hash(stored_hash, password):
+            flash("Password salah", "danger")
+            print("Debug: Password salah")
+            return redirect(url_for('login_admin'))
+        
+        # Jika validasi berhasil, simpan username ke session dan redirect
+        session['admin'] = user['username']
+        flash("Login berhasil!", "success")
+        return redirect(url_for('dashboard_admin'))
     
+    return render_template('admin/login_admin.html')
+
+# Route untuk dashboard admin
+@app.route('/admin/dashboard_admin', methods=['GET'])
+def dashboard_admin():
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('first_menu'))
     
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    
+    # Ambil jumlah total staf loket
+    try:
+        cursor.execute("SELECT COUNT(*) as total FROM staf_loket")
+        total_staf_loket = cursor.fetchone()['total']
+    except Exception as e:
+        print("Error mengambil data staf loket:", e)
+        total_staf_loket = 0
+
+    # Ambil jumlah total staf prodi
+    try:
+        cursor.execute("SELECT COUNT(*) as total FROM staf_prodi")
+        total_staf_prodi = cursor.fetchone()['total']
+    except Exception as e:
+        print("Error mengambil data staf prodi:", e)
+        total_staf_prodi = 0
+
+    # Ambil jumlah total mahasiswa
+    try:
+        cursor.execute("SELECT COUNT(*) as total FROM data_mahasiswa")
+        total_mahasiswa = cursor.fetchone()['total']
+    except Exception as e:
+        print("Error mengambil data mahasiswa:", e)
+        total_mahasiswa = 0
+
+    # Ambil data slip pembayaran
+    try:
+        cursor.execute("SELECT * FROM slip_pembayaran")
+        slips = cursor.fetchall()
+    except Exception as e:
+        print("Error mengambil data slip pembayaran:", e)
+        slips = []
+
+    cursor.close()
+    conn.close()
+    
+    return render_template(
+        'admin/dashboard_admin.html',
+        total_staf_loket=total_staf_loket,
+        total_staf_prodi=total_staf_prodi,
+        total_mahasiswa=total_mahasiswa,
+        slips=slips
+    )
+
+# Route untuk data staf loket
+@app.route('/admin/data_staf_loket', methods=['GET', 'POST'])
+def data_staf_loket():
+    # Hubungkan ke database
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('dashboard_admin'))
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    try:
+        # Ambil data dari tabel staf_loket
+        query = "SELECT * FROM data_staf_loket"
+        cursor.execute(query)
+        staf = cursor.fetchall()
+        print("Debug: staf =", staf)
+    except Exception as e:
+        flash("Gagal mengambil data staf loket: " + str(e), "danger")
+        staf = []
+    finally:
+        cursor.close()
+        conn.close()
+    
+    # Kirim data staf ke template
+    return render_template('admin/data_staf_loket.html', staf=staf)
+
+# Route untuk memproses form penambahan staf loket (dipanggil oleh modal overlay di halaman data staf loket)
+@app.route('/admin/loket/tambah_staf_loket', methods=['POST'])
+def tambah_staf_loket():
+    # Ambil data dari form
+    nama = request.form.get('nama_staf_loket', '').strip()
+    nip = request.form.get('nip_staf_loket', '').strip()
+    email = request.form.get('email_staf_loket', '').strip()
+    no_hp = request.form.get('no_staf_loket', '').strip()
+    password = request.form.get('password_staf_loket', '').strip()
+    
+    # Validasi: pastikan semua field diisi
+    if not all([nama, nip, email, no_hp, password]):
+        flash("Semua field harus diisi!", "danger")
+        return redirect(url_for('data_staf_loket'))
+    
+    # Hash password untuk keamanan
+    hashed_password = generate_password_hash(password)
+    
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('data_staf_loket'))
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    try:
+        insert_query = """
+            INSERT INTO data_staf_loket (nama_staf_loket, nip_staf_loket, email_staf_loket, no_staf_loket, password_staf_loket)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(insert_query, (nama, nip, email, no_hp, hashed_password))
+        conn.commit()
+        flash("Staf loket berhasil ditambahkan", "success")
+    except Exception as e:
+        conn.rollback()
+        flash("Gagal menambahkan staf loket: " + str(e), "danger")
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return redirect(url_for('data_staf_loket'))
+
+# Route untuk data staf prodi
+@app.route('/admin/data_staf_prodi', methods=['GET', 'POST'])
+def data_staf_prodi():
+    # Hubungkan ke database
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('dashboard_admin'))
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    try:
+        # Ambil data dari tabel staf_loket
+        query = "SELECT * FROM data_staf_prodi"
+        cursor.execute(query)
+        staf = cursor.fetchall()
+        print("Debug: staf =", staf)
+    except Exception as e:
+        flash("Gagal mengambil data staf prodi: " + str(e), "danger")
+        staf = []
+    finally:
+        cursor.close()
+        conn.close()
+    
+    # Kirim data staf ke template
+    return render_template('admin/data_staf_prodi.html', staf=staf)
+
+# Route untuk memproses form penambahan staf prodi (dipanggil oleh modal overlay di halaman data staf prodi)
+@app.route('/admin/prodi/tambah_staf_prodi', methods=['POST'])
+def tambah_staf_prodi():
+    # Ambil data dari form
+    nama = request.form.get('nama_staf_prodi', '').strip()
+    nip = request.form.get('nip_staf_prodi', '').strip()
+    email = request.form.get('email_staf_prodi', '').strip()
+    no_hp = request.form.get('no_staf_prodi', '').strip()
+    password = request.form.get('password_staf_prodi', '').strip()
+    
+    # Validasi: pastikan semua field diisi
+    if not all([nama, nip, email, no_hp, password]):
+        flash("Semua field harus diisi!", "danger")
+        return redirect(url_for('data_staf_prodi'))
+    
+    # Hash password untuk keamanan
+    hashed_password = generate_password_hash(password)
+    
+    conn = get_db_connection()
+    if conn is None:
+        flash("Gagal terhubung ke database", "danger")
+        return redirect(url_for('data_staf_prodi'))
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    try:
+        insert_query = """
+            INSERT INTO data_staf_prodi (nama_staf_prodi, nip_staf_prodi, email_staf_prodi, no_staf_prodi, password_staf_prodi)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(insert_query, (nama, nip, email, no_hp, hashed_password))
+        conn.commit()
+        flash("Staf loket berhasil ditambahkan", "success")
+    except Exception as e:
+        conn.rollback()
+        flash("Gagal menambahkan staf prodi: " + str(e), "danger")
+    finally:
+        cursor.close()
+        conn.close()
+    
+    return redirect(url_for('data_staf_prodi'))
+
+# API Endpoint untuk pencarian staf prodi berdasarkan nama dan nim
+@app.route('/api/staf_prodi/search', methods=['GET'])
+def search_staf_prodi():
+    q = request.args.get('q', '').strip()
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({'error': 'Gagal terhubung ke database'}), 500
+    
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    sql = """
+        SELECT * FROM staf_prodi
+        WHERE nama_staf_prodi LIKE %s OR nim_staf_prodi LIKE %s
+    """
+    like_query = "%" + q + "%"
+    cursor.execute(sql, (like_query, like_query))
+    results = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return jsonify(results)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

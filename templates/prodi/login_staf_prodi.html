@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-slip Universitas Dayanu Ikhsanuddin</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Fullscreen Layout */
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        background-color: #f8f9fa;
+      }
+
+      .container-body {
+        display: flex;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      /* Bagian kiri */
+      .left-side {
+        width: 50%;
+        background-color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        text-align: center;
+      }
+
+      /* Bagian kanan */
+      .right-side {
+        width: 50%;
+        background: linear-gradient(135deg, #28a745, #218838);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        color: white;
+      }
+
+      .form-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        max-width: 400px;
+        color: black;
+      }
+
+      .form-control {
+        font-size: 18px;
+        padding: 12px;
+        border-radius: 6px;
+      }
+
+      /* Pesan error */
+      .error-message {
+        color: red;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container-body">
+      <!-- Bagian Kiri -->
+      <div class="left-side">
+        <h2>Selamat datang di aplikasi E-Slip</h2>
+        <h3>Universitas Dayanu Ikhsanuddin</h3>
+        <a
+          href="/mahasiswa/register_mahasiswa"
+          class="btn btn-success btn-lg mt-3"
+          >Register</a
+        >
+      </div>
+
+      <!-- Bagian Kanan -->
+      <div class="right-side">
+        <div class="form-container">
+          <h4 class="text-center mb-4">Login Mahasiswa</h4>
+
+          <form action="{{ url_for('login_mahasiswa') }}" method="POST">
+            <!-- Input NIM -->
+            <div class="form-group">
+              <label for="nimMahasiswa">NIM Mahasiswa</label>
+              <input
+                type="text"
+                class="form-control {% if error_nim %} is-invalid {% endif %}"
+                id="nimMahasiswa"
+                name="nimMahasiswa"
+                placeholder="Masukkan NIM"
+                required
+              />
+              {% if error_nim %}
+              <span class="error-message" id="error-nim">{{ error_nim }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Input Password -->
+            <div class="form-group">
+              <label for="passwordMahasiswa">Password</label>
+              <input
+                type="password"
+                class="form-control {% if error_password %} is-invalid {% endif %}"
+                id="passwordMahasiswa"
+                name="passwordMahasiswa"
+                placeholder="Masukkan Password"
+                required
+              />
+              {% if error_password %}
+              <span class="error-message" id="error-password"
+                >{{ error_password }}</span
+              >
+              {% endif %}
+            </div>
+
+            <!-- Checkbox Show Password -->
+            <div class="form-check">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="showPassword"
+              />
+              <label class="form-check-label" for="showPassword"
+                >Tampilkan Password</label
+              >
+            </div>
+
+            <!-- Tombol Login -->
+            <button type="submit" class="btn btn-primary btn-block mt-3">
+              Login
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("showPassword")
+        .addEventListener("change", function () {
+          var passwordInput = document.getElementById("passwordMahasiswa");
+          passwordInput.type = this.checked ? "text" : "password";
+        });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const nimInput = document.getElementById("nimMahasiswa");
+        const passwordInput = document.getElementById("passwordMahasiswa");
+        const nimError = document.getElementById("error-nim");
+        const passwordError = document.getElementById("error-password");
+
+        function hideErrorOnInput(input, errorElement) {
+          input.addEventListener("input", function () {
+            if (errorElement) {
+              errorElement.style.display = "none";
+            }
+          });
+        }
+
+        if (nimInput && nimError) hideErrorOnInput(nimInput, nimError);
+        if (passwordInput && passwordError)
+          hideErrorOnInput(passwordInput, passwordError);
+      });
+    </script>
+  </body>
+</html>

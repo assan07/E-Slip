@@ -7,184 +7,262 @@
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
-      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-      crossorigin="anonymous"
     />
-
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+      rel="stylesheet"
+    />
     <style>
+      /* Global Styles */
+      body {
+        font-family: "Montserrat", sans-serif;
+        background-color: #f5f7fa;
+      }
+
+      /* Sidebar Styling */
       .sidebar {
-        background-color: #f8f9fa;
+        width: 250px;
+        background-color: #007bff;
+        color: white;
         height: 100vh;
         padding: 20px;
+        position: fixed;
       }
-      .profile-photo {
-        width: 100%;
-        height: 150px;
-        background-color: #eaeaea;
-        border: 1px solid #007bff;
+
+      .sidebar h4 {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 30px;
+      }
+
+      .sidebar .nav-link {
+        color: white;
+        font-size: 16px;
+        padding: 10px;
+        border-radius: 5px;
+      }
+
+      .sidebar .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .submenu {
+        display: none;
+        margin-left: 20px;
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-left: 260px;
+        padding: 30px;
+      }
+
+      .card {
         border-radius: 10px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 20px;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
       }
-      .profile-photo img {
-        border-radius: 50%;
-        width: 60%;
-        height: 60%;
-      }
+
+      /* Input Styling */
       .form-control {
-        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 1px solid #007bff;
+      }
+
+      /* Button Styling */
+      .btn-primary {
+        background-color: #007bff;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        border-radius: 8px;
+      }
+
+      .btn-primary:hover {
+        background-color: #0056b3;
+      }
+
+      .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        border-radius: 8px;
+      }
+
+      /* Responsive Sidebar */
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 100%;
+          height: auto;
+          position: relative;
+        }
+
+        .main-content {
+          margin-left: 0;
+        }
       }
     </style>
   </head>
   <body>
     <div class="d-flex">
+      <!-- Sidebar -->
       <div class="sidebar">
-        <h2>E-Slip</h2>
-        <ul class="list-unstyled">
-          <li><a href="#">Beranda</a></li>
-          <li><a href="#">Data Mahasiswa</a></li>
-          <li><a href="#">Arsip Slip</a></li>
-          <li><a href="#">Slip Loket</a></li>
-          <li><a href="#">Slip Prodi</a></li>
-          <li><a href="#">Slip Mahasiswa</a></li>
-          <li><a href="#">Logout</a></li>
-        </ul>
-        <p>Login as: Achmad Hasanudin</p>
+        <h4>E-Slip</h4>
+        <nav class="nav flex-column">
+          <a class="nav-link" href="/mahasiswa/beranda_mahasiswa"
+            ><i class="fas fa-home"></i> Beranda</a
+          >
+          <a class="nav-link" href="/mahasiswa/data_mahasiswa"
+            ><i class="fas fa-user"></i> Data Mahasiswa</a
+          >
+          <a class="nav-link" href="/mahasiswa/unggah_slip"
+            ><i class="fas fa-upload"></i> Unggah Slip</a
+          >
+          <a class="nav-link" onclick="toggleSubMenu(event)"
+            ><i class="fas fa-folder"></i> Arsip Slip</a
+          >
+          <div class="submenu">
+            <a class="nav-link" href="/mahasiswa/arsip_slip_Loket"
+              ><i class="fas fa-file"></i> Slip Loket</a
+            >
+            <a class="nav-link" href="/mahasiswa/arsip_slip_prodi"
+              ><i class="fas fa-file-alt"></i> Slip Prodi</a
+            >
+            <a class="nav-link" href="/mahasiswa/arsip_slip_mahasiswa"
+              ><i class="fas fa-file-invoice"></i> Slip Mahasiswa</a
+            >
+          </div>
+          <a class="nav-link" href="/logout"
+            ><i class="fas fa-sign-out-alt"></i> Logout</a
+          >
+        </nav>
       </div>
 
-      <div class="container">
-        <div class="row">
-          <div class="head-main col-md-12 d-flex">
-            <div class="search col-md-4">
+      <!-- Main Content -->
+      <div class="main-content container">
+        <div class="card">
+          <h3 class="text-center mb-4">Stor Slip Pembayaran</h3>
+
+          <!-- Form -->
+          <form
+            action="{{ url_for('unggah_slip') }}"
+            method="POST"
+            enctype="multipart/form-data"
+          >
+            <div class="row">
+              <div class="col-md-6">
+                <label for="fullName">Nama Lengkap</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="fullName"
+                  name="fullNameMahasiswa"
+                  value="{{ user.nama_mahasiswa if user else '' }}"
+                  placeholder="Nama Lengkap"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="email">Email Mahasiswa</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="emailMahasiswa"
+                  value="{{ user.email_mahasiswa if user else '' }}"  
+                  placeholder="Email"
+                />
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <label for="phone">No. Handphone</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="phone"
+                  name="phoneMahasiswa"
+                  value="{{ user.no_mahasiswa if user else '' }}"
+                  placeholder="No. Handphone"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="studentNumber">Nomor Induk Mahasiswa</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="studentNumber"
+                  name="studentNumber"
+                  value="{{ user.nim_mahasiswa if user else '' }}"
+                  placeholder="Nomor Induk"
+                />
+              </div>
+            </div>
+
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <label for="semester">Semester</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="semester"
+                  name="semesterMahasiswa"
+                  value="{{ user.semester if user else '' }}"
+                  placeholder="Semester"
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="paymentCycle">Cicilan Ke</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="paymentCycle"
+                  name="paymentCycle"
+                  placeholder="Cicilan Ke"
+                />
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="form-label text-warning"
+                >Stor Slip Loket "warna kuning"</label
+              >
+              <input type="file" class="form-control mb-2" name="slip_loket" />
+              <label class="form-label text-danger"
+                >Stor Slip Prodi "warna Merah"</label
+              >
+              <input type="file" class="form-control mb-2" name="slip_prodi" />
+              <label class="form-label text-success"
+                >Stor Slip Mahasiswa "warna Hijau"</label
+              >
               <input
-                type="text"
-                class="form-control"
-                placeholder="Cari Mahasiswa"
+                type="file"
+                class="form-control mb-3"
+                name="slip_mahasiswa"
               />
             </div>
-            <div class="massage">
-              <p>🔔</p>
-            </div>
-            <div class="profile">
-              <p>👤</p>
-            </div>
-          </div>
 
-          <div class="col-md-8">
-            <h3>Stor Slip Pembayaran</h3>
-            {% with messages = get_flashed_messages(with_categories=true) %} {%
-            if messages %} {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %} {% endif %} {% endwith %}
-            <form
-              action="{{ url_for('stor_slip') }}"
-              method="POST"
-              enctype="multipart/form-data"
-            >
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label for="fullName">Nama Lengkap</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="fullName"
-                    name="fullNameMahasiswa"
-                    placeholder="Nama Lengkap"
-                  />
-                </div>
-                <div class="form-group col-md-6">
-                  <label for="email">Email Mahasiswa</label>
-                  <input
-                    type="email"
-                    class="form-control"
-                    id="email"
-                    name="emailMahasiswa"
-                    placeholder="Email"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label for="phone">No. Handphone</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="phone"
-                    name="phoneMahasiswa"
-                    placeholder="No. Handphone"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label for="semester">Semester</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="semester"
-                    name="semesterMahasiswa"
-                    placeholder="Semester"
-                  />
-                </div>
-                <div class="form-group col-md-6">
-                  <label for="paymentCycle">Cicilan Ke</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="paymentCycle"
-                    name="paymentCycle"
-                    placeholder="Cicilan Ke"
-                  />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label for="studentNumber">Nomor Induk Mahasiswa</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="studentNumber"
-                    name="studentNumber"
-                    placeholder="Nomor Induk"
-                  />
-                </div>
-                <div class="form-group col-md-6">
-                  <label for="totalPay">Total Bayar</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="totalPay"
-                    name="totalPay"
-                    placeholder="Total Bayar"
-                  />
-                </div>
-              </div>
-              <div class="form-group row">
-                <label for="storSlipLoket" class="text-warning"
-                  >Stor Slip Loket "warna kuning"</label
-                >
-                <input type="file" name="slip_loket" id="slip_loket" />
-                <label for="storSlipProdi" class="text-danger"
-                  >Stor Slip Loket "warna Merah"</label
-                >
-                <input type="file" name="slip_prodi" id="slip_prodi" />
-                <label for="storSlipMahasiswa" class="text-success"
-                  >Stor Slip Loket "warna Hijau"</label
-                >
-                <input type="file" name="slip_mahasiswa" id="slip_mahasiswa" />
-              </div>
-              <button type="button" class="btn btn-secondary">Ubah Pass</button>
+            <div class="text-center">
+              <button type="button" class="btn btn-secondary">
+                Cencle
+              </button>
               <button type="submit" class="btn btn-primary">Simpan</button>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.0/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      function toggleSubMenu(event) {
+        event.preventDefault();
+        let submenu = document.querySelector(".submenu");
+        submenu.style.display =
+          submenu.style.display === "block" ? "none" : "block";
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
